@@ -1,0 +1,7 @@
+{
+  "whisper_path": "/path/to/whisper-cli", 
+  "model_path": "/path/to/models",
+  "openvino_script_path": "/path/to/openvino_env.bat", 
+  "openvino_enabled": false,
+  "openvino_shell": "auto"
+}
