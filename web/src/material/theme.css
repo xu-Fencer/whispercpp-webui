@@ -1,0 +1,14 @@
+/* Material 3 Theme */
+:root {
+  --md-sys-color-primary: #6200ee;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-background: #ffffff;
+  --md-sys-color-on-background: #000000;
+  /* 其他 Material 主题变量... */
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+}
