@@ -5,11 +5,18 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',  // 后端接口地址（根据实际情况修改）
-      '/ws': 'ws://localhost:8000',    // WebSocket 代理
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:8000',
+        ws: true,
+        changeOrigin: true,
+      },
     },
   },
   build: {
-    outDir: 'dist',  // 输出目录
+    outDir: 'dist',
   },
 });

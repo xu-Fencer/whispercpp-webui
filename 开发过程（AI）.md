@@ -2240,4 +2240,602 @@ npm -v
 
 配置好后，你就可以使用 VSCode 高效地开发前端了。
 
-ChatGPT 也可能会犯错。OpenAI 不会使用您的工作空间数据来训练其模型。
+
+好的，我给你把前端补齐并修好两件事：
+
+* 页面无样式：已接入 @material/web 并加载 Material 3 主题与字体，组件实际使用 M3 控件。
+* 点击按钮无请求：已在页面中绑定 fetch 调用后端 API，能看到网络请求发出并回显结果。
+
+下面是前端所有需要更新/新增的文件内容（按你给的目录放置）。你直接替换/新增即可运行。注意：若后端接口字段名或路径与你当前版本不一致，请按需微调。
+
+1. web/index.html
+
+<!DOCTYPE html>
+
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Whisper Web UI</title>
+    <!-- 字体：Roboto + Material Symbols（从 Google Fonts 获取） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
+2. web/vite.config.ts
+   import { defineConfig } from 'vite';
+   import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+plugins: \[vue()],
+server: {
+proxy: {
+'/api': {
+target: '[http://localhost:8000](http://localhost:8000)',
+changeOrigin: true,
+},
+'/ws': {
+target: 'ws\://localhost:8000',
+ws: true,
+changeOrigin: true,
+},
+},
+},
+build: {
+outDir: 'dist',
+},
+});
+
+3. web/package.json
+   {
+   "name": "whisper-webui",
+   "version": "1.0.0",
+   "type": "module",
+   "scripts": {
+   "dev": "vite",
+   "build": "vite build",
+   "preview": "vite preview"
+   },
+   "dependencies": {
+   "@material/web": "^1.0.1",
+   "pinia": "^2.1.7",
+   "vue": "^3.4.35",
+   "vue-router": "^4.3.2"
+   },
+   "devDependencies": {
+   "@vitejs/plugin-vue": "^5.0.5",
+   "typescript": "^5.5.4",
+   "vite": "^5.4.2"
+   }
+   }
+
+4. web/src/main.ts
+   import { createApp } from 'vue';
+   import { createPinia } from 'pinia';
+   import App from './app.vue';
+   import router from './router/index';
+
+// 引入 Material 3 主题与全局样式
+import './material/theme.css';
+import './styles/global.css';
+
+// 引入 @material/web 组件（按需）
+import '@material/web/button/filled-button.js';
+import '@material/web/button/filled-tonal-button.js';
+import '@material/web/textfield/outlined-text-field.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
+import '@material/web/checkbox/checkbox.js';
+import '@material/web/switch/switch.js';
+import '@material/web/progress/linear-progress.js';
+import '@material/web/iconbutton/icon-button.js';
+
+const app = createApp(App);
+app.use(createPinia());
+app.use(router);
+app.mount('#app');
+
+5. web/src/app.vue
+
+   <template>
+
+  <div class="app">
+    <header class="app-bar">
+      <div class="app-bar-title">Whisper Web UI</div>
+      <nav class="app-bar-nav">
+        <router-link to="/">任务</router-link>
+        <router-link to="/preview">预览</router-link>
+        <router-link to="/settings">设置</router-link>
+      </nav>
+    </header>
+
+```
+<main class="app-main">
+  <router-view />
+</main>
+```
+
+  </div>
+</template>
+
+<script setup>
+</script>
+
+<style scoped>
+.app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.app-bar-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+.app-bar-nav a {
+  color: var(--md-sys-color-on-primary);
+  text-decoration: none;
+  margin-left: 16px;
+}
+.app-main {
+  padding: 16px;
+}
+</style>
+
+6. web/src/router/index.ts
+   import { createRouter, createWebHistory } from 'vue-router';
+   import TasksPage from '../pages/TasksPage.vue';
+   import PreviewPage from '../pages/PreviewPage.vue';
+   import SettingsPage from '../pages/SettingsPage.vue';
+
+const routes = \[
+{ path: '/', component: TasksPage },
+{ path: '/preview', component: PreviewPage },
+{ path: '/settings', component: SettingsPage },
+];
+
+const router = createRouter({
+history: createWebHistory(),
+routes,
+});
+
+export default router;
+
+7. web/src/stores/settings.ts
+   import { defineStore } from 'pinia';
+
+export const useSettingsStore = defineStore('settings', {
+state: () => ({
+whisperPath: '',
+modelPath: '',
+openvinoScriptPath: '',
+openvinoEnabled: false,
+openvinoShell: 'auto',
+lastProbe: null as null | Record\<string, unknown>,
+}),
+});
+
+8. web/src/api/client.ts
+   const base = '';
+
+async function jsonGet<T>(url: string): Promise<T> {
+const res = await fetch(base + url, { method: 'GET' });
+if (!res.ok) throw new Error(await res.text());
+return res.json();
+}
+
+async function jsonPost<T>(url: string, body: unknown): Promise<T> {
+const res = await fetch(base + url, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(body ?? {}),
+});
+if (!res.ok) throw new Error(await res.text());
+return res.json();
+}
+
+async function formPost<T>(url: string, form: FormData): Promise<T> {
+const res = await fetch(base + url, {
+method: 'POST',
+body: form,
+});
+if (!res.ok) throw new Error(await res.text());
+return res.json();
+}
+
+export const api = {
+getSettings: () => jsonGet('/api/settings/'),
+saveSettings: (settings: any) => jsonPost('/api/settings/', settings),
+testOpenVINO: () => jsonPost('/api/settings/openvino/test', {}),
+probeFfmpeg: () => jsonGet('/api/probe/ffmpeg'),
+probeWhisper: () => jsonGet('/api/probe/whisper'),
+createTask: (payload: any) => jsonPost('/api/tasks/', payload),
+getTask: (jobId: string) => jsonGet(`/api/tasks/${jobId}`),
+listFiles: (jobId: string) => jsonGet(`/api/files/${jobId}`),
+};
+
+9. web/src/pages/SettingsPage.vue
+
+   <template>
+
+  <section class="card">
+    <h2>设置</h2>
+
+```
+<div class="row">
+  <md-outlined-text-field
+    label="Whisper 可执行文件路径"
+    :value="whisperPath"
+    @input="(e:any)=> whisperPath = e.target.value"
+    style="width: 520px"
+  />
+</div>
+
+<div class="row">
+  <md-outlined-text-field
+    label="模型文件路径（.bin/.gguf）"
+    :value="modelPath"
+    @input="(e:any)=> modelPath = e.target.value"
+    style="width: 520px"
+  />
+</div>
+
+<div class="row">
+  <md-outlined-text-field
+    label="OpenVINO 初始化脚本路径（.bat/.sh）"
+    :value="openvinoScriptPath"
+    @input="(e:any)=> openvinoScriptPath = e.target.value"
+    style="width: 520px"
+  />
+</div>
+
+<div class="row">
+  <md-switch
+    :selected="openvinoEnabled"
+    @change="(e:any)=> openvinoEnabled = e.target.selected"
+  ></md-switch>
+  <span style="margin-left:8px">每次运行前执行 OpenVINO 初始化脚本</span>
+</div>
+
+<div class="row">
+  <md-filled-tonal-button @click="save">保存设置</md-filled-tonal-button>
+  <md-filled-button style="margin-left: 8px" @click="testOpenVINO">测试 OpenVINO 脚本</md-filled-button>
+  <md-filled-button style="margin-left: 8px" @click="probe">探测环境</md-filled-button>
+</div>
+
+<pre v-if="message" class="msg">{{ message }}</pre>
+<pre v-if="probeResult" class="msg">{{ probeResult }}</pre>
+```
+
+  </section>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { api } from '../api/client';
+import { useSettingsStore } from '../stores/settings';
+
+const store = useSettingsStore();
+
+const whisperPath = ref(store.whisperPath);
+const modelPath = ref(store.modelPath);
+const openvinoScriptPath = ref(store.openvinoScriptPath);
+const openvinoEnabled = ref(store.openvinoEnabled);
+
+const message = ref('');
+const probeResult = ref('');
+
+onMounted(async () => {
+  try {
+    const data = await api.getSettings();
+    whisperPath.value = (data as any).whisper_path || '';
+    modelPath.value = (data as any).model_path || '';
+    openvinoScriptPath.value = (data as any).openvino_script_path || '';
+    openvinoEnabled.value = !!(data as any).openvino_enabled;
+  } catch (e: any) {
+    message.value = '读取设置失败: ' + e.message;
+  }
+});
+
+async function save() {
+  try {
+    await api.saveSettings({
+      whisper_path: whisperPath.value,
+      model_path: modelPath.value,
+      openvino_script_path: openvinoScriptPath.value,
+      openvino_enabled: openvinoEnabled.value,
+      openvino_shell: 'auto',
+    });
+    store.whisperPath = whisperPath.value;
+    store.modelPath = modelPath.value;
+    store.openvinoScriptPath = openvinoScriptPath.value;
+    store.openvinoEnabled = openvinoEnabled.value;
+    message.value = '保存成功';
+  } catch (e: any) {
+    message.value = '保存失败: ' + e.message;
+  }
+}
+
+async function testOpenVINO() {
+  try {
+    const res = await api.testOpenVINO();
+    message.value = JSON.stringify(res, null, 2);
+  } catch (e: any) {
+    message.value = '测试失败: ' + e.message;
+  }
+}
+
+async function probe() {
+  try {
+    const ff = await api.probeFfmpeg();
+    const wh = await api.probeWhisper();
+    probeResult.value = 'ffmpeg: ' + JSON.stringify(ff, null, 2) + '\n\nwhisper: ' + JSON.stringify(wh, null, 2);
+  } catch (e: any) {
+    probeResult.value = '探测失败: ' + e.message;
+  }
+}
+</script>
+
+<style scoped>
+.card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.row { margin: 12px 0; display: flex; align-items: center; }
+.msg { background: #111; color: #eee; padding: 12px; border-radius: 8px; max-height: 280px; overflow: auto; }
+</style>
+
+10. web/src/pages/TasksPage.vue
+
+    <template>
+
+  <section class="card">
+    <h2>任务</h2>
+
+```
+<div class="row">
+  <md-outlined-text-field
+    label="源文件服务器路径（暂用：后端可访问的绝对路径）"
+    :value="serverFilePath"
+    @input="(e:any)=> serverFilePath = e.target.value"
+    style="width: 520px"
+  />
+</div>
+
+<param-basic
+  :language="language"
+  :translate="translate"
+  :outputFormat="outputFormat"
+  @update:language="(v:string)=> language=v"
+  @update:translate="(v:boolean)=> translate=v"
+  @update:outputFormat="(v:string)=> outputFormat=v"
+/>
+
+<param-advanced
+  :threads="threads"
+  :beamSize="beamSize"
+  :bestOf="bestOf"
+  @update:threads="(v:number)=> threads=v"
+  @update:beamSize="(v:number)=> beamSize=v"
+  @update:bestOf="(v:number)=> bestOf=v"
+/>
+
+<div class="row">
+  <md-filled-button @click="createTask">创建任务</md-filled-button>
+  <md-filled-tonal-button style="margin-left: 8px" @click="refreshStatus" :disabled="!jobId">刷新状态</md-filled-tonal-button>
+</div>
+
+<div class="row" v-if="jobId"><strong>Job ID:</strong> {{ jobId }}</div>
+<div class="row" v-if="statusText"><strong>状态:</strong> {{ statusText }}</div>
+
+<log-console v-if="jobId" :jobId="jobId" />
+```
+
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { api } from '../api/client';
+import { useSettingsStore } from '../stores/settings';
+import ParamBasic from '../components/ParamBasic.vue';
+import ParamAdvanced from '../components/ParamAdvanced.vue';
+import LogConsole from '../components/LogConsole.vue';
+
+const store = useSettingsStore();
+
+const serverFilePath = ref('');
+const language = ref('auto');
+const translate = ref(false);
+const outputFormat = ref('srt');
+
+const threads = ref(4);
+const beamSize = ref(5);
+const bestOf = ref(5);
+
+const jobId = ref('');
+const statusText = ref('');
+
+async function createTask() {
+  try {
+    if (!serverFilePath.value) throw new Error('请填写后端可访问的源文件绝对路径');
+    if (!store.modelPath || !store.whisperPath) throw new Error('请先到“设置”页面填写可执行与模型路径');
+    const payload = {
+      input_file: serverFilePath.value,
+      output_format: outputFormat.value,
+      whisper_params: {
+        model: store.modelPath,
+        threads: threads.value,
+        beam_size: beamSize.value,
+        best_of: bestOf.value,
+        language: language.value,
+        translate: translate.value ? 'true' : 'false',
+      },
+    };
+    const res = await api.createTask(payload);
+    jobId.value = (res as any).job_id || '';
+    statusText.value = '任务已创建';
+  } catch (e: any) {
+    statusText.value = '创建失败: ' + e.message;
+  }
+}
+
+async function refreshStatus() {
+  try {
+    if (!jobId.value) return;
+    const res = await api.getTask(jobId.value);
+    statusText.value = JSON.stringify(res, null, 2);
+  } catch (e: any) {
+    statusText.value = '获取状态失败: ' + e.message;
+  }
+}
+</script>
+
+<style scoped>
+.card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.row { margin: 12px 0; display: flex; align-items: center; }
+</style>
+
+11. web/src/pages/PreviewPage.vue
+
+    <template>
+
+  <section class="card">
+    <h2>预览</h2>
+    <div class="row">
+      <md-outlined-text-field
+        label="媒体文件 URL（由后端静态或文件接口提供）"
+        :value="mediaUrl"
+        @input="(e:any)=> mediaUrl = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+    <div class="row">
+      <md-outlined-text-field
+        label="字幕 VTT URL"
+        :value="vttUrl"
+        @input="(e:any)=> vttUrl = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+
+```
+<div class="player">
+  <video v-if="isVideo" :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+    <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+  </video>
+  <audio v-else :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+    <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+  </audio>
+</div>
+```
+
+  </section>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+
+const mediaUrl = ref('');
+const vttUrl = ref('');
+const isVideo = computed(() => {
+  return /\.(mp4|mkv|webm|mov)$/i.test(mediaUrl.value);
+});
+</script>
+
+<style scoped>
+.card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.row { margin: 12px 0; display: flex; align-items: center; }
+.player { margin-top: 16px; }
+</style>
+
+12. web/src/components/ParamBasic.vue
+
+    <template>
+
+  <div class="row">
+    <div style="margin-right: 16px">
+      <label class="label">语言</label>
+      <md-outlined-select @change="onLang" :value="language">
+        <md-select-option value="auto">auto</md-select-option>
+        <md-select-option value="en">en</md-select-option>
+        <md-select-option value="zh">zh</md-select-option>
+        <md-select-option value="ja">ja</md-select-option>
+        <md-select-option value="es">es</md-select-option>
+      </md-outlined-select>
+    </div>
+
+```
+<div style="margin-right: 16px">
+  <label class="label">翻译到英文</label>
+  <md-switch :selected="translate" @change="(e:any)=> $emit('update:translate', e.target.selected)"></md-switch>
+</div>
+
+<div>
+  <label class="label">输出格式</label>
+  <md-outlined-select @change="onFmt" :value="outputFormat">
+    <md-select-option value="srt">srt</md-select-option>
+    <md-select-option value="vtt">vtt</md-select-option>
+    <md-select-option value="json">json</md-select-option>
+    <md-select-option value="txt">txt</md-select-option>
+  </md-outlined-select>
+</div>
+```
+
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  language: string,
+  translate: boolean,
+  outputFormat: string,
+}>();
+const emit = defineEmits(['update:language', 'update:translate', 'update:outputFormat']);
+
+function onLang(e: any) {
+  emit('update:language', e.target.value);
+}
+function onFmt(e: any) {
+  emit('update:outputFormat', e.target.value);
+}
+</script>
+
+<style scoped>
+.row { display: flex; align-items: center; margin: 12px 0; gap: 16px; }
+.label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+</style>
+
+13. web/src/components/ParamAdvanced.vue
+
+    <template>
+
+  <div class="row">
+    <div class="col">
+      <label class="label">线程数 (--threads)</label>
+      <md-outlined-text-field type="number" :value="threads" @input="(e:any)=> $emit('update:threads', parseInt(e.target.value||'0'))"/>
+    </div>
+    <div class="col">
+      <label class="label">Beam Size (--beam-size)</label>
+      <md-outlined-text-field type="number" :value="beamSize" @input="(e:any)=> $emit('update:beamSize', parseInt(e.target.value||'0'))"/>
+    </div>
+    <div class="col">
+      <label class="label">Best Of (--best-of)</label>
+      <md-outlined-text-field type="number" :value="bestOf" @input="(e:any)=> $emit('update:bestOf', parseInt(e.target.value||'0'))"/>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+defineProps<{ threads: number; beamSize: number; bestOf: number }>();
+defineEmits(['update:threads','update:beamSize','update:bestOf']);
+</script>
+
+<style scoped>
+.row { display: flex; gap: 16px; margin: 12px 0; }
+.col { display: flex; flex-direction: column; gap: 6px; width: 180px; }
+.label { font-size: 12px; color: var(--md-sys-color-on-s

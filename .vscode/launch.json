@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Firefox against localhost",
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "url": "http://localhost:3000/", // 根据你的 Vite 开发服务器端口调整此URL
+      "webRoot": "${workspaceFolder}/web/src", // 指向你的源代码目录
+      "reloadOnAttach": true
+    },
+    {
+      "name": "Launch Chrome against localhost",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "runtimeExecutable": "/usr/bin/google-chrome-stable"
+    }
+  ]
+}

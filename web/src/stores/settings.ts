@@ -6,19 +6,7 @@ export const useSettingsStore = defineStore('settings', {
     modelPath: '',
     openvinoScriptPath: '',
     openvinoEnabled: false,
+    openvinoShell: 'auto',
+    lastProbe: null as null | Record<string, unknown>,
   }),
-  actions: {
-    setWhisperPath(path: string) {
-      this.whisperPath = path;
-    },
-    setModelPath(path: string) {
-      this.modelPath = path;
-    },
-    setOpenvinoScriptPath(path: string) {
-      this.openvinoScriptPath = path;
-    },
-    toggleOpenvino(enabled: boolean) {
-      this.openvinoEnabled = enabled;
-    },
-  },
 });
