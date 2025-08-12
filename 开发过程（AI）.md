@@ -1,4 +1,7 @@
 跳至内容
+历史聊天记录
+您说：
+跳至内容
 您说：
 我想让你给whisper.cpp开发一个webui，后端使用python，需要通过命令行调用whisper，需要能调整whisper.cpp可设置的所有参数，支持选择模型（选择文件），支持选择whisper的可执行程序的目录，支持在页面中直接预览生成好的字幕（视频/音频外挂srt），但我不知道是否需要使用ffmpeg（如果需要，你查找资料后加入这个功能），使用Material Design 3。先写一份项目开发思路，给我检查之后我再让你写代码。你可以参考以下帮助来看每个参数的含义和如何设置：
 
@@ -67,7 +70,7 @@ options:
 
 以及这是whisper-server的手册，你觉得webui用哪个好就选哪个：
 
-`markdown
+markdown
 # whisper.cpp/examples/server
 
 Simple http server. WAV Files are passed to the inference model via http requests.
@@ -176,17 +179,17 @@ k6 run bench.js \
   --env RESPONSE_FORMAT=json
 
 **Environment variables:**
-- `FILE_PATH`: Path to the audio file to send (must be absolute or relative to the k6 working directory)
-- `BASE_URL`: Server base URL (default: `http://127.0.0.1:8080`)
-- `ENDPOINT`: API endpoint (default: `/inference`)
-- `CONCURRENCY`: Number of concurrent requests (default: 4)
-- `TEMPERATURE`: Decoding temperature (default: 0.0)
-- `TEMPERATURE_INC`: Temperature increment (default: 0.2)
-- `RESPONSE_FORMAT`: Response format (default: `json`)
+- FILE_PATH: Path to the audio file to send (must be absolute or relative to the k6 working directory)
+- BASE_URL: Server base URL (default: http://127.0.0.1:8080)
+- ENDPOINT: API endpoint (default: /inference)
+- CONCURRENCY: Number of concurrent requests (default: 4)
+- TEMPERATURE: Decoding temperature (default: 0.0)
+- TEMPERATURE_INC: Temperature increment (default: 0.2)
+- RESPONSE_FORMAT: Response format (default: json)
 
 **Note:**
-- The server must be running and accessible at the specified `BASE_URL` and `ENDPOINT`.
-- The script is located in the same directory as this README: `bench.js`.
+- The server must be running and accessible at the specified BASE_URL and ENDPOINT.
+- The script is located in the same directory as this README: bench.js.
 
 ChatGPT 说：
 
@@ -2240,47 +2243,37 @@ npm -v
 
 配置好后，你就可以使用 VSCode 高效地开发前端了。
 
+用户说：现在我成功运行了前端与后端，但是现在有两个问题，一个问题是目前页面没有任何样式，未能成功应用MD3设计；另一个问题是现在点击按钮无法发起任何与后端api连接的请求，我已查看浏览器调试的网络请求发现就是没有，请你帮我改一下，并且帮我完善一下缺少的文件
+ChatGPT 说：
+User analysis
+思考，持续 64 秒
 
 好的，我给你把前端补齐并修好两件事：
 
-* 页面无样式：已接入 @material/web 并加载 Material 3 主题与字体，组件实际使用 M3 控件。
-* 点击按钮无请求：已在页面中绑定 fetch 调用后端 API，能看到网络请求发出并回显结果。
+    页面无样式：已接入 @material/web 并加载 Material 3 主题与字体，组件实际使用 M3 控件。
+
+    点击按钮无请求：已在页面中绑定 fetch 调用后端 API，能看到网络请求发出并回显结果。
 
 下面是前端所有需要更新/新增的文件内容（按你给的目录放置）。你直接替换/新增即可运行。注意：若后端接口字段名或路径与你当前版本不一致，请按需微调。
 
-1. web/index.html
+    web/index.html
 
-<!DOCTYPE html>
+<!DOCTYPE html> <html lang="zh"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0"/> <title>Whisper Web UI</title> <!-- 字体：Roboto + Material Symbols（从 Google Fonts 获取） --> <link rel="preconnect" href="https://fonts.googleapis.com"> <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined" rel="stylesheet"> </head> <body> <div id="app"></div> <script type="module" src="/src/main.ts"></script> </body> </html>
 
-<html lang="zh">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Whisper Web UI</title>
-    <!-- 字体：Roboto + Material Symbols（从 Google Fonts 获取） -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined" rel="stylesheet">
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
-</html>
-
-2. web/vite.config.ts
-   import { defineConfig } from 'vite';
-   import vue from '@vitejs/plugin-vue';
+    web/vite.config.ts
+    import { defineConfig } from 'vite';
+    import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
-plugins: \[vue()],
+plugins: [vue()],
 server: {
 proxy: {
 '/api': {
-target: '[http://localhost:8000](http://localhost:8000)',
+target: 'http://localhost:8000',
 changeOrigin: true,
 },
 '/ws': {
-target: 'ws\://localhost:8000',
+target: 'ws://localhost:8000',
 ws: true,
 changeOrigin: true,
 },
@@ -2291,34 +2284,34 @@ outDir: 'dist',
 },
 });
 
-3. web/package.json
-   {
-   "name": "whisper-webui",
-   "version": "1.0.0",
-   "type": "module",
-   "scripts": {
-   "dev": "vite",
-   "build": "vite build",
-   "preview": "vite preview"
-   },
-   "dependencies": {
-   "@material/web": "^1.0.1",
-   "pinia": "^2.1.7",
-   "vue": "^3.4.35",
-   "vue-router": "^4.3.2"
-   },
-   "devDependencies": {
-   "@vitejs/plugin-vue": "^5.0.5",
-   "typescript": "^5.5.4",
-   "vite": "^5.4.2"
-   }
-   }
+    web/package.json
+    {
+    "name": "whisper-webui",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+    },
+    "dependencies": {
+    "@material/web": "^1.0.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.35",
+    "vue-router": "^4.3.2"
+    },
+    "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+    }
+    }
 
-4. web/src/main.ts
-   import { createApp } from 'vue';
-   import { createPinia } from 'pinia';
-   import App from './app.vue';
-   import router from './router/index';
+    web/src/main.ts
+    import { createApp } from 'vue';
+    import { createPinia } from 'pinia';
+    import App from './app.vue';
+    import router from './router/index';
 
 // 引入 Material 3 主题与全局样式
 import './material/theme.css';
@@ -2340,62 +2333,24 @@ app.use(createPinia());
 app.use(router);
 app.mount('#app');
 
-5. web/src/app.vue
+    web/src/app.vue
+    <template>
 
-   <template>
+<div class="app"> <header class="app-bar"> <div class="app-bar-title">Whisper Web UI</div> <nav class="app-bar-nav"> <router-link to="/">任务</router-link> <router-link to="/preview">预览</router-link> <router-link to="/settings">设置</router-link> </nav> </header>
 
-  <div class="app">
-    <header class="app-bar">
-      <div class="app-bar-title">Whisper Web UI</div>
-      <nav class="app-bar-nav">
-        <router-link to="/">任务</router-link>
-        <router-link to="/preview">预览</router-link>
-        <router-link to="/settings">设置</router-link>
-      </nav>
-    </header>
-
-```
 <main class="app-main">
   <router-view />
 </main>
-```
 
-  </div>
-</template>
+</div> </template> <script setup> </script> <style scoped> .app-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); } .app-bar-title { font-weight: 600; font-size: 18px; } .app-bar-nav a { color: var(--md-sys-color-on-primary); text-decoration: none; margin-left: 16px; } .app-main { padding: 16px; } </style>
 
-<script setup>
-</script>
+    web/src/router/index.ts
+    import { createRouter, createWebHistory } from 'vue-router';
+    import TasksPage from '../pages/TasksPage.vue';
+    import PreviewPage from '../pages/PreviewPage.vue';
+    import SettingsPage from '../pages/SettingsPage.vue';
 
-<style scoped>
-.app-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-}
-.app-bar-title {
-  font-weight: 600;
-  font-size: 18px;
-}
-.app-bar-nav a {
-  color: var(--md-sys-color-on-primary);
-  text-decoration: none;
-  margin-left: 16px;
-}
-.app-main {
-  padding: 16px;
-}
-</style>
-
-6. web/src/router/index.ts
-   import { createRouter, createWebHistory } from 'vue-router';
-   import TasksPage from '../pages/TasksPage.vue';
-   import PreviewPage from '../pages/PreviewPage.vue';
-   import SettingsPage from '../pages/SettingsPage.vue';
-
-const routes = \[
+const routes = [
 { path: '/', component: TasksPage },
 { path: '/preview', component: PreviewPage },
 { path: '/settings', component: SettingsPage },
@@ -2408,8 +2363,8 @@ routes,
 
 export default router;
 
-7. web/src/stores/settings.ts
-   import { defineStore } from 'pinia';
+    web/src/stores/settings.ts
+    import { defineStore } from 'pinia';
 
 export const useSettingsStore = defineStore('settings', {
 state: () => ({
@@ -2418,12 +2373,12 @@ modelPath: '',
 openvinoScriptPath: '',
 openvinoEnabled: false,
 openvinoShell: 'auto',
-lastProbe: null as null | Record\<string, unknown>,
+lastProbe: null as null | Record<string, unknown>,
 }),
 });
 
-8. web/src/api/client.ts
-   const base = '';
+    web/src/api/client.ts
+    const base = '';
 
 async function jsonGet<T>(url: string): Promise<T> {
 const res = await fetch(base + url, { method: 'GET' });
@@ -2457,18 +2412,15 @@ testOpenVINO: () => jsonPost('/api/settings/openvino/test', {}),
 probeFfmpeg: () => jsonGet('/api/probe/ffmpeg'),
 probeWhisper: () => jsonGet('/api/probe/whisper'),
 createTask: (payload: any) => jsonPost('/api/tasks/', payload),
-getTask: (jobId: string) => jsonGet(`/api/tasks/${jobId}`),
-listFiles: (jobId: string) => jsonGet(`/api/files/${jobId}`),
+getTask: (jobId: string) => jsonGet(/api/tasks/${jobId}),
+listFiles: (jobId: string) => jsonGet(/api/files/${jobId}),
 };
 
-9. web/src/pages/SettingsPage.vue
+    web/src/pages/SettingsPage.vue
+    <template>
 
-   <template>
+<section class="card"> <h2>设置</h2>
 
-  <section class="card">
-    <h2>设置</h2>
-
-```
 <div class="row">
   <md-outlined-text-field
     label="Whisper 可执行文件路径"
@@ -2512,8 +2464,419 @@ listFiles: (jobId: string) => jsonGet(`/api/files/${jobId}`),
 
 <pre v-if="message" class="msg">{{ message }}</pre>
 <pre v-if="probeResult" class="msg">{{ probeResult }}</pre>
-```
 
+</section> </template> <script setup lang="ts"> import { onMounted, ref } from 'vue'; import { api } from '../api/client'; import { useSettingsStore } from '../stores/settings'; const store = useSettingsStore(); const whisperPath = ref(store.whisperPath); const modelPath = ref(store.modelPath); const openvinoScriptPath = ref(store.openvinoScriptPath); const openvinoEnabled = ref(store.openvinoEnabled); const message = ref(''); const probeResult = ref(''); onMounted(async () => { try { const data = await api.getSettings(); whisperPath.value = (data as any).whisper_path || ''; modelPath.value = (data as any).model_path || ''; openvinoScriptPath.value = (data as any).openvino_script_path || ''; openvinoEnabled.value = !!(data as any).openvino_enabled; } catch (e: any) { message.value = '读取设置失败: ' + e.message; } }); async function save() { try { await api.saveSettings({ whisper_path: whisperPath.value, model_path: modelPath.value, openvino_script_path: openvinoScriptPath.value, openvino_enabled: openvinoEnabled.value, openvino_shell: 'auto', }); store.whisperPath = whisperPath.value; store.modelPath = modelPath.value; store.openvinoScriptPath = openvinoScriptPath.value; store.openvinoEnabled = openvinoEnabled.value; message.value = '保存成功'; } catch (e: any) { message.value = '保存失败: ' + e.message; } } async function testOpenVINO() { try { const res = await api.testOpenVINO(); message.value = JSON.stringify(res, null, 2); } catch (e: any) { message.value = '测试失败: ' + e.message; } } async function probe() { try { const ff = await api.probeFfmpeg(); const wh = await api.probeWhisper(); probeResult.value = 'ffmpeg: ' + JSON.stringify(ff, null, 2) + '\n\nwhisper: ' + JSON.stringify(wh, null, 2); } catch (e: any) { probeResult.value = '探测失败: ' + e.message; } } </script> <style scoped> .card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); } .row { margin: 12px 0; display: flex; align-items: center; } .msg { background: #111; color: #eee; padding: 12px; border-radius: 8px; max-height: 280px; overflow: auto; } </style>
+
+    web/src/pages/TasksPage.vue
+    <template>
+
+<section class="card"> <h2>任务</h2>
+
+<div class="row">
+  <md-outlined-text-field
+    label="源文件服务器路径（暂用：后端可访问的绝对路径）"
+    :value="serverFilePath"
+    @input="(e:any)=> serverFilePath = e.target.value"
+    style="width: 520px"
+  />
+</div>
+
+<param-basic
+  :language="language"
+  :translate="translate"
+  :outputFormat="outputFormat"
+  @update:language="(v:string)=> language=v"
+  @update:translate="(v:boolean)=> translate=v"
+  @update:outputFormat="(v:string)=> outputFormat=v"
+/>
+
+<param-advanced
+  :threads="threads"
+  :beamSize="beamSize"
+  :bestOf="bestOf"
+  @update:threads="(v:number)=> threads=v"
+  @update:beamSize="(v:number)=> beamSize=v"
+  @update:bestOf="(v:number)=> bestOf=v"
+/>
+
+<div class="row">
+  <md-filled-button @click="createTask">创建任务</md-filled-button>
+  <md-filled-tonal-button style="margin-left: 8px" @click="refreshStatus" :disabled="!jobId">刷新状态</md-filled-tonal-button>
+</div>
+
+<div class="row" v-if="jobId"><strong>Job ID:</strong> {{ jobId }}</div>
+<div class="row" v-if="statusText"><strong>状态:</strong> {{ statusText }}</div>
+
+<log-console v-if="jobId" :jobId="jobId" />
+
+</section> </template> <script setup lang="ts"> import { ref } from 'vue'; import { api } from '../api/client'; import { useSettingsStore } from '../stores/settings'; import ParamBasic from '../components/ParamBasic.vue'; import ParamAdvanced from '../components/ParamAdvanced.vue'; import LogConsole from '../components/LogConsole.vue'; const store = useSettingsStore(); const serverFilePath = ref(''); const language = ref('auto'); const translate = ref(false); const outputFormat = ref('srt'); const threads = ref(4); const beamSize = ref(5); const bestOf = ref(5); const jobId = ref(''); const statusText = ref(''); async function createTask() { try { if (!serverFilePath.value) throw new Error('请填写后端可访问的源文件绝对路径'); if (!store.modelPath || !store.whisperPath) throw new Error('请先到“设置”页面填写可执行与模型路径'); const payload = { input_file: serverFilePath.value, output_format: outputFormat.value, whisper_params: { model: store.modelPath, threads: threads.value, beam_size: beamSize.value, best_of: bestOf.value, language: language.value, translate: translate.value ? 'true' : 'false', }, }; const res = await api.createTask(payload); jobId.value = (res as any).job_id || ''; statusText.value = '任务已创建'; } catch (e: any) { statusText.value = '创建失败: ' + e.message; } } async function refreshStatus() { try { if (!jobId.value) return; const res = await api.getTask(jobId.value); statusText.value = JSON.stringify(res, null, 2); } catch (e: any) { statusText.value = '获取状态失败: ' + e.message; } } </script> <style scoped> .card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); } .row { margin: 12px 0; display: flex; align-items: center; } </style>
+
+    web/src/pages/PreviewPage.vue
+    <template>
+
+<section class="card"> <h2>预览</h2> <div class="row"> <md-outlined-text-field label="媒体文件 URL（由后端静态或文件接口提供）" :value="mediaUrl" @input="(e:any)=> mediaUrl = e.target.value" style="width: 520px" /> </div> <div class="row"> <md-outlined-text-field label="字幕 VTT URL" :value="vttUrl" @input="(e:any)=> vttUrl = e.target.value" style="width: 520px" /> </div>
+
+<div class="player">
+  <video v-if="isVideo" :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+    <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+  </video>
+  <audio v-else :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+    <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+  </audio>
+</div>
+
+</section> </template> <script setup lang="ts"> import { computed, ref } from 'vue'; const mediaUrl = ref(''); const vttUrl = ref(''); const isVideo = computed(() => { return /\.(mp4|mkv|webm|mov)$/i.test(mediaUrl.value); }); </script> <style scoped> .card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); } .row { margin: 12px 0; display: flex; align-items: center; } .player { margin-top: 16px; } </style>
+
+    web/src/components/ParamBasic.vue
+    <template>
+
+<div class="row"> <div style="margin-right: 16px"> <label class="label">语言</label> <md-outlined-select @change="onLang" :value="language"> <md-select-option value="auto">auto</md-select-option> <md-select-option value="en">en</md-select-option> <md-select-option value="zh">zh</md-select-option> <md-select-option value="ja">ja</md-select-option> <md-select-option value="es">es</md-select-option> </md-outlined-select> </div>
+
+<div style="margin-right: 16px">
+  <label class="label">翻译到英文</label>
+  <md-switch :selected="translate" @change="(e:any)=> $emit('update:translate', e.target.selected)"></md-switch>
+</div>
+
+<div>
+  <label class="label">输出格式</label>
+  <md-outlined-select @change="onFmt" :value="outputFormat">
+    <md-select-option value="srt">srt</md-select-option>
+    <md-select-option value="vtt">vtt</md-select-option>
+    <md-select-option value="json">json</md-select-option>
+    <md-select-option value="txt">txt</md-select-option>
+  </md-outlined-select>
+</div>
+
+</div> </template> <script setup lang="ts"> const props = defineProps<{ language: string, translate: boolean, outputFormat: string, }>(); const emit = defineEmits(['update:language', 'update:translate', 'update:outputFormat']); function onLang(e: any) { emit('update:language', e.target.value); } function onFmt(e: any) { emit('update:outputFormat', e.target.value); } </script> <style scoped> .row { display: flex; align-items: center; margin: 12px 0; gap: 16px; } .label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--md-sys-color-on-surface-variant); } </style>
+
+    web/src/components/ParamAdvanced.vue
+    <template>
+
+<div class="row"> <div class="col"> <label class="label">线程数 (--threads)</label> <md-outlined-text-field type="number" :value="threads" @input="(e:any)=> $emit('update:threads', parseInt(e.target.value||'0'))"/> </div> <div class="col"> <label class="label">Beam Size (--beam-size)</label> <md-outlined-text-field type="number" :value="beamSize" @input="(e:any)=> $emit('update:beamSize', parseInt(e.target.value||'0'))"/> </div> <div class="col"> <label class="label">Best Of (--best-of)</label> <md-outlined-text-field type="number" :value="bestOf" @input="(e:any)=> $emit('update:bestOf', parseInt(e.target.value||'0'))"/> </div> </div> </template> <script setup lang="ts"> defineProps<{ threads: number; beamSize: number; bestOf: number }>(); defineEmits(['update:threads','update:beamSize','update:bestOf']); </script> <style scoped> .row { display: flex; gap: 16px; margin: 12px 0; } .col { display: flex; flex-direction: column; gap: 6px; width: 180px; } .label { font-size: 12px; color: var(--md-sys-color-on-s
+您说：
+请你把你的回答格式化一下，用markdown比如用代码块包裹代码
+ChatGPT 说：
+User analysis
+思考，持续 58 秒
+
+好的，我将上面的回答用 Markdown 重新整理，所有代码都放入代码块中，方便你直接复制粘贴。
+
+    页面无样式：已接入 @material/web 并加载 Material 3 主题与字体，组件实际使用 M3 控件。
+
+    点击按钮无请求：已在页面中绑定 fetch 调用后端 API，能看到网络请求发出并回显结果。
+
+下面是前端所有需要更新/新增的文件内容（按你给的目录放置）。你直接替换/新增即可运行。注意：若后端接口字段名或路径与你当前版本不一致，请按需微调。
+
+    web/index.html
+
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Whisper Web UI</title>
+    <!-- 字体：Roboto + Material Symbols（从 Google Fonts 获取） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
+    web/vite.config.ts
+
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:8000',
+        ws: true,
+        changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    outDir: 'dist',
+  },
+});
+
+    web/package.json
+
+{
+  "name": "whisper-webui",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@material/web": "^1.0.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.35",
+    "vue-router": "^4.3.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}
+
+    web/src/main.ts
+
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './app.vue';
+import router from './router/index';
+
+// 引入 Material 3 主题与全局样式
+import './material/theme.css';
+import './styles/global.css';
+
+// 引入 @material/web 组件（按需）
+import '@material/web/button/filled-button.js';
+import '@material/web/button/filled-tonal-button.js';
+import '@material/web/textfield/outlined-text-field.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
+import '@material/web/checkbox/checkbox.js';
+import '@material/web/switch/switch.js';
+import '@material/web/progress/linear-progress.js';
+import '@material/web/iconbutton/icon-button.js';
+
+const app = createApp(App);
+app.use(createPinia());
+app.use(router);
+app.mount('#app');
+
+    web/src/app.vue
+
+<template>
+  <div class="app">
+    <header class="app-bar">
+      <div class="app-bar-title">Whisper Web UI</div>
+      <nav class="app-bar-nav">
+        <router-link to="/">任务</router-link>
+        <router-link to="/preview">预览</router-link>
+        <router-link to="/settings">设置</router-link>
+      </nav>
+    </header>
+
+    <main class="app-main">
+      <router-view />
+    </main>
+  </div>
+</template>
+
+<script setup>
+</script>
+
+<style scoped>
+.app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.app-bar-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+.app-bar-nav a {
+  color: var(--md-sys-color-on-primary);
+  text-decoration: none;
+  margin-left: 16px;
+}
+.app-main {
+  padding: 16px;
+}
+</style>
+
+    web/src/router/index.ts
+
+import { createRouter, createWebHistory } from 'vue-router';
+import TasksPage from '../pages/TasksPage.vue';
+import PreviewPage from '../pages/PreviewPage.vue';
+import SettingsPage from '../pages/SettingsPage.vue';
+
+const routes = [
+  { path: '/', component: TasksPage },
+  { path: '/preview', component: PreviewPage },
+  { path: '/settings', component: SettingsPage },
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+export default router;
+
+    web/src/stores/settings.ts
+
+import { defineStore } from 'pinia';
+
+export const useSettingsStore = defineStore('settings', {
+  state: () => ({
+    whisperPath: '',
+    modelPath: '',
+    openvinoScriptPath: '',
+    openvinoEnabled: false,
+    openvinoShell: 'auto',
+    lastProbe: null as null | Record<string, unknown>,
+  }),
+});
+
+    web/src/api/client.ts
+
+const base = '';
+
+async function jsonGet<T>(url: string): Promise<T> {
+  const res = await fetch(base + url, { method: 'GET' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function jsonPost<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function formPost<T>(url: string, form: FormData): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    body: form,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  getSettings: () => jsonGet('/api/settings/'),
+  saveSettings: (settings: any) => jsonPost('/api/settings/', settings),
+  testOpenVINO: () => jsonPost('/api/settings/openvino/test', {}),
+  probeFfmpeg: () => jsonGet('/api/probe/ffmpeg'),
+  probeWhisper: () => jsonGet('/api/probe/whisper'),
+  createTask: (payload: any) => jsonPost('/api/tasks/', payload),
+  getTask: (jobId: string) => jsonGet(`/api/tasks/${jobId}`),
+  list
+
+您说：
+继续
+ChatGPT 说：
+User analysis
+思考，持续 69 秒
+
+继续补全剩余文件内容（延续第 8 条被截断的位置），均已用代码块包裹，直接复制到对应路径即可。
+
+    web/src/api/client.ts（续）
+
+const base = '';
+
+async function jsonGet<T>(url: string): Promise<T> {
+  const res = await fetch(base + url, { method: 'GET' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function jsonPost<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function formPost<T>(url: string, form: FormData): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    body: form,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  getSettings: () => jsonGet('/api/settings/'),
+  saveSettings: (settings: any) => jsonPost('/api/settings/', settings),
+  testOpenVINO: () => jsonPost('/api/settings/openvino/test', {}),
+  probeFfmpeg: () => jsonGet('/api/probe/ffmpeg'),
+  probeWhisper: () => jsonGet('/api/probe/whisper'),
+  createTask: (payload: any) => jsonPost('/api/tasks/', payload),
+  getTask: (jobId: string) => jsonGet(`/api/tasks/${jobId}`),
+  listFiles: (jobId: string) => jsonGet(`/api/files/${jobId}`),
+};
+
+    web/src/pages/SettingsPage.vue
+
+<template>
+  <section class="card">
+    <h2>设置</h2>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="Whisper 可执行文件路径"
+        :value="whisperPath"
+        @input="(e:any)=> whisperPath = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="模型文件路径（.bin/.gguf）"
+        :value="modelPath"
+        @input="(e:any)=> modelPath = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="OpenVINO 初始化脚本路径（.bat/.sh）"
+        :value="openvinoScriptPath"
+        @input="(e:any)=> openvinoScriptPath = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="row">
+      <md-switch
+        :selected="openvinoEnabled"
+        @change="(e:any)=> openvinoEnabled = e.target.selected"
+      ></md-switch>
+      <span style="margin-left:8px">每次运行前执行 OpenVINO 初始化脚本</span>
+    </div>
+
+    <div class="row">
+      <md-filled-tonal-button @click="save">保存设置</md-filled-tonal-button>
+      <md-filled-button style="margin-left: 8px" @click="testOpenVINO">测试 OpenVINO 脚本</md-filled-button>
+      <md-filled-button style="margin-left: 8px" @click="probe">探测环境</md-filled-button>
+    </div>
+
+    <pre v-if="message" class="msg">{{ message }}</pre>
+    <pre v-if="probeResult" class="msg">{{ probeResult }}</pre>
   </section>
 </template>
 
@@ -2589,52 +2952,48 @@ async function probe() {
 .msg { background: #111; color: #eee; padding: 12px; border-radius: 8px; max-height: 280px; overflow: auto; }
 </style>
 
-10. web/src/pages/TasksPage.vue
+    web/src/pages/TasksPage.vue
 
-    <template>
-
+<template>
   <section class="card">
     <h2>任务</h2>
 
-```
-<div class="row">
-  <md-outlined-text-field
-    label="源文件服务器路径（暂用：后端可访问的绝对路径）"
-    :value="serverFilePath"
-    @input="(e:any)=> serverFilePath = e.target.value"
-    style="width: 520px"
-  />
-</div>
+    <div class="row">
+      <md-outlined-text-field
+        label="源文件服务器路径（暂用：后端可访问的绝对路径）"
+        :value="serverFilePath"
+        @input="(e:any)=> serverFilePath = e.target.value"
+        style="width: 520px"
+      />
+    </div>
 
-<param-basic
-  :language="language"
-  :translate="translate"
-  :outputFormat="outputFormat"
-  @update:language="(v:string)=> language=v"
-  @update:translate="(v:boolean)=> translate=v"
-  @update:outputFormat="(v:string)=> outputFormat=v"
-/>
+    <param-basic
+      :language="language"
+      :translate="translate"
+      :outputFormat="outputFormat"
+      @update:language="(v:string)=> language=v"
+      @update:translate="(v:boolean)=> translate=v"
+      @update:outputFormat="(v:string)=> outputFormat=v"
+    />
 
-<param-advanced
-  :threads="threads"
-  :beamSize="beamSize"
-  :bestOf="bestOf"
-  @update:threads="(v:number)=> threads=v"
-  @update:beamSize="(v:number)=> beamSize=v"
-  @update:bestOf="(v:number)=> bestOf=v"
-/>
+    <param-advanced
+      :threads="threads"
+      :beamSize="beamSize"
+      :bestOf="bestOf"
+      @update:threads="(v:number)=> threads=v"
+      @update:beamSize="(v:number)=> beamSize=v"
+      @update:bestOf="(v:number)=> bestOf=v"
+    />
 
-<div class="row">
-  <md-filled-button @click="createTask">创建任务</md-filled-button>
-  <md-filled-tonal-button style="margin-left: 8px" @click="refreshStatus" :disabled="!jobId">刷新状态</md-filled-tonal-button>
-</div>
+    <div class="row">
+      <md-filled-button @click="createTask">创建任务</md-filled-button>
+      <md-filled-tonal-button style="margin-left: 8px" @click="refreshStatus" :disabled="!jobId">刷新状态</md-filled-tonal-button>
+    </div>
 
-<div class="row" v-if="jobId"><strong>Job ID:</strong> {{ jobId }}</div>
-<div class="row" v-if="statusText"><strong>状态:</strong> {{ statusText }}</div>
+    <div class="row" v-if="jobId"><strong>Job ID:</strong> {{ jobId }}</div>
+    <div class="row" v-if="statusText"><strong>状态:</strong> {{ statusText }}</div>
 
-<log-console v-if="jobId" :jobId="jobId" />
-```
-
+    <log-console v-if="jobId" :jobId="jobId" />
   </section>
 </template>
 
@@ -2700,10 +3059,9 @@ async function refreshStatus() {
 .row { margin: 12px 0; display: flex; align-items: center; }
 </style>
 
-11. web/src/pages/PreviewPage.vue
+    web/src/pages/PreviewPage.vue
 
-    <template>
-
+<template>
   <section class="card">
     <h2>预览</h2>
     <div class="row">
@@ -2723,17 +3081,48 @@ async function refreshStatus() {
       />
     </div>
 
-```
-<div class="player">
-  <video v-if="isVideo" :src="mediaUrl" controls style="width: 100%; max-width: 800px">
-    <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
-  </video>
-  <audio v-else :src="mediaUrl" controls style="width: 100%; max-width: 800px">
-    <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
-  </audio>
-</div>
-```
+    <div class="player">
+      <video v-if="isVideo" :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+       
 
+您说：
+继续
+ChatGPT 说：
+User analysis
+思考，持续 61 秒
+
+继续补全剩余文件内容（承接第 11 条被截断的位置），均已用代码块包裹，直接复制到对应路径即可。
+
+    web/src/pages/PreviewPage.vue
+
+<template>
+  <section class="card">
+    <h2>预览</h2>
+    <div class="row">
+      <md-outlined-text-field
+        label="媒体文件 URL（由后端静态或文件接口提供）"
+        :value="mediaUrl"
+        @input="(e:any)=> mediaUrl = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+    <div class="row">
+      <md-outlined-text-field
+        label="字幕 VTT URL"
+        :value="vttUrl"
+        @input="(e:any)=> vttUrl = e.target.value"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="player">
+      <video v-if="isVideo" :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+        <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+      </video>
+      <audio v-else :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+        <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+      </audio>
+    </div>
   </section>
 </template>
 
@@ -2753,10 +3142,9 @@ const isVideo = computed(() => {
 .player { margin-top: 16px; }
 </style>
 
-12. web/src/components/ParamBasic.vue
+    web/src/components/ParamBasic.vue
 
-    <template>
-
+<template>
   <div class="row">
     <div style="margin-right: 16px">
       <label class="label">语言</label>
@@ -2769,23 +3157,20 @@ const isVideo = computed(() => {
       </md-outlined-select>
     </div>
 
-```
-<div style="margin-right: 16px">
-  <label class="label">翻译到英文</label>
-  <md-switch :selected="translate" @change="(e:any)=> $emit('update:translate', e.target.selected)"></md-switch>
-</div>
+    <div style="margin-right: 16px">
+      <label class="label">翻译到英文</label>
+      <md-switch :selected="translate" @change="(e:any)=> $emit('update:translate', e.target.selected)"></md-switch>
+    </div>
 
-<div>
-  <label class="label">输出格式</label>
-  <md-outlined-select @change="onFmt" :value="outputFormat">
-    <md-select-option value="srt">srt</md-select-option>
-    <md-select-option value="vtt">vtt</md-select-option>
-    <md-select-option value="json">json</md-select-option>
-    <md-select-option value="txt">txt</md-select-option>
-  </md-outlined-select>
-</div>
-```
-
+    <div>
+      <label class="label">输出格式</label>
+      <md-outlined-select @change="onFmt" :value="outputFormat">
+        <md-select-option value="srt">srt</md-select-option>
+        <md-select-option value="vtt">vtt</md-select-option>
+        <md-select-option value="json">json</md-select-option>
+        <md-select-option value="txt">txt</md-select-option>
+      </md-outlined-select>
+    </div>
   </div>
 </template>
 
@@ -2810,10 +3195,9 @@ function onFmt(e: any) {
 .label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
 </style>
 
-13. web/src/components/ParamAdvanced.vue
+    web/src/components/ParamAdvanced.vue
 
-    <template>
-
+<template>
   <div class="row">
     <div class="col">
       <label class="label">线程数 (--threads)</label>
@@ -2838,4 +3222,2444 @@ defineEmits(['update:threads','update:beamSize','update:bestOf']);
 <style scoped>
 .row { display: flex; gap: 16px; margin: 12px 0; }
 .col { display: flex; flex-direction: column; gap: 6px; width: 180px; }
-.label { font-size: 12px; color: var(--md-sys-color-on-s
+.label { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+</style>
+
+    web/src/components/LogConsole.vue
+
+<template>
+  <section class="console">
+    <div class="head">
+      <div class="title">运行日志</div>
+      <div class="status" :data-state="state">
+        {{ stateText }}
+      </div>
+    </div>
+    <pre ref="preRef" class="body">{{ logs }}</pre>
+    <div v-if="err" class="err">日志连接失败：{{ err }}（可忽略或检查后端 WS 路径）</div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+
+const props = defineProps<{ jobId: string }>();
+
+const logs = ref('');
+const err = ref('');
+const state = ref<'idle'|'connecting'|'open'|'closed'>('idle');
+const preRef = ref<HTMLElement|null>(null);
+let ws: WebSocket | null = null;
+
+const stateText = computed(() => {
+  switch (state.value) {
+    case 'connecting': return '连接中';
+    case 'open': return '已连接';
+    case 'closed': return '已关闭';
+    default: return '空闲';
+  }
+});
+
+function connect() {
+  cleanup();
+  state.value = 'connecting';
+  try {
+    // 适配 dev/preview：以当前站点为基准拼出 ws/wss
+    const wsUrl = `${location.origin.replace(/^http/, 'ws')}/ws/logs/${encodeURIComponent(props.jobId)}`;
+    ws = new WebSocket(wsUrl);
+    ws.onopen = () => { state.value = 'open'; };
+    ws.onmessage = (ev) => {
+      logs.value += (typeof ev.data === 'string' ? ev.data : '') + '\n';
+      // 自动滚动到底部
+      requestAnimationFrame(() => {
+        const el = preRef.value;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    };
+    ws.onerror = () => {
+      err.value = 'WebSocket 发生错误';
+    };
+    ws.onclose = () => {
+      state.value = 'closed';
+    };
+  } catch (e: any) {
+    err.value = e?.message || String(e);
+    state.value = 'closed';
+  }
+}
+
+function cleanup() {
+  if (ws) {
+    try { ws.close(); } catch {}
+    ws = null;
+  }
+}
+
+watch(() => props.jobId, (id) => {
+  if (id) {
+    logs.value = '';
+    err.value = '';
+    connect();
+  } else {
+    cleanup();
+  }
+}, { immediate: true });
+
+onMounted(() => {
+  if (props.jobId) connect();
+});
+
+onBeforeUnmount(() => cleanup());
+</script>
+
+<style scoped>
+.console { margin-top: 16px; border: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); border-radius: 12px; overflow: hidden; }
+.head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--md-sys-color-surface); }
+.title { font-weight: 600; }
+.status { font-size: 12px; opacity: 0.8; }
+.body { background: #0b0b0b; color: #eaeaea; padding: 12px; margin: 0; max-height: 320px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.err { color: #ffb4ab; padding: 8px 12px; font-size: 12px; background: color-mix(in srgb, #ffb4ab 12%, transparent); }
+</style>
+
+    web/src/styles/global.css
+
+/* 全局基础样式与排版 */
+:root {
+  --radius-m: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Roboto", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  background: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+}
+
+a {
+  color: inherit;
+}
+
+.card {
+  border-radius: var(--radius-m);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.10);
+}
+
+    web/src/material/theme.css
+
+/* 简化版 Material 3 主题令牌，仅覆盖本项目用到的变量 */
+:root {
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-on-surface-variant: #49454F;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-sys-color-primary: #D0BCFF;
+    --md-sys-color-on-primary: #381E72;
+
+    --md-sys-color-background: #1C1B1F;
+    --md-sys-color-on-background: #E6E1E5;
+
+    --md-sys-color-surface: #1C1B1F;
+    --md-sys-color-on-surface: #E6E1E5;
+    --md-sys-color-on-surface-variant: #CAC4D0;
+  }
+}
+
+说明与提示：
+
+    LogConsole.vue 采用 WebSocket 路径 /ws/logs/{jobId}（已在 vite.config.ts 代理为后端 ws://localhost:8000）。若你的后端日志推送路径不同，请在组件内调整 wsUrl 的路径。
+
+    若你暂时没有 WebSocket 日志接口，可以先注释掉 LogConsole 的引用，或改为轮询 REST 接口。
+
+您说：
+经过我的测试发现设置中设置的whisper可执行路径未在其他代码中体现，比如位于/whisper的测试whisper状态，还有创建的任务在执行时（最终可溯源到command_builder.py）应该直接调用设置好的路径。还有所有使用(e:any)都报错[vue/no-parsing-error]
+Parsing error: Unexpected token :.eslint-plugin-vue
+(parameter) e: any
+ChatGPT 说：
+User analysis
+思考，持续 44 秒
+
+你提到的两个问题我都修好了：
+
+    Whisper 可执行路径未被使用：前端在探测接口与创建任务时显式传递 whisper 可执行路径；同时给出后端修补建议，确保 command_builder.py 与 /api/probe/whisper 默认从已保存设置中读取该路径。
+
+    (e:any) 导致 eslint-plugin-vue 报错：移除了模板中的类型标注，改为在 <script setup> 里定义处理函数并正确断言类型。
+
+下面是需要替换/更新的文件内容（仅列出有变更的部分）。直接覆盖即可。
+
+    web/src/api/client.ts
+
+const base = '';
+
+async function jsonGet<T>(url: string): Promise<T> {
+  const res = await fetch(base + url, { method: 'GET' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function jsonPost<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function formPost<T>(url: string, form: FormData): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    body: form,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  getSettings: () => jsonGet('/api/settings/'),
+  saveSettings: (settings: any) => jsonPost('/api/settings/', settings),
+
+  // 增加可选 exe 参数，前端可显式传递 whisper 可执行路径
+  probeWhisper: (exe?: string) =>
+    jsonGet(`/api/probe/whisper${exe ? `?exe=${encodeURIComponent(exe)}` : ''}`),
+
+  probeFfmpeg: () => jsonGet('/api/probe/ffmpeg'),
+  testOpenVINO: () => jsonPost('/api/settings/openvino/test', {}),
+
+  createTask: (payload: any) => jsonPost('/api/tasks/', payload),
+  getTask: (jobId: string) => jsonGet(`/api/tasks/${jobId}`),
+  listFiles: (jobId: string) => jsonGet(`/api/files/${jobId}`),
+};
+
+    web/src/pages/SettingsPage.vue
+
+    去掉模板里的 (e:any)，改用脚本里的处理函数
+
+    探测 Whisper 时把 exe=whisperPath 传给后端
+
+<template>
+  <section class="card">
+    <h2>设置</h2>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="Whisper 可执行文件路径"
+        :value="whisperPath"
+        @input="onWhisperPath"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="模型文件路径（.bin/.gguf）"
+        :value="modelPath"
+        @input="onModelPath"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="OpenVINO 初始化脚本路径（.bat/.sh）"
+        :value="openvinoScriptPath"
+        @input="onOpenvinoScriptPath"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="row">
+      <md-switch
+        :selected="openvinoEnabled"
+        @change="onOpenvinoEnabled"
+      ></md-switch>
+      <span style="margin-left:8px">每次运行前执行 OpenVINO 初始化脚本</span>
+    </div>
+
+    <div class="row">
+      <md-filled-tonal-button @click="save">保存设置</md-filled-tonal-button>
+      <md-filled-button style="margin-left: 8px" @click="testOpenVINO">测试 OpenVINO 脚本</md-filled-button>
+      <md-filled-button style="margin-left: 8px" @click="probe">探测环境</md-filled-button>
+    </div>
+
+    <pre v-if="message" class="msg">{{ message }}</pre>
+    <pre v-if="probeResult" class="msg">{{ probeResult }}</pre>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { api } from '../api/client';
+import { useSettingsStore } from '../stores/settings';
+
+const store = useSettingsStore();
+
+const whisperPath = ref(store.whisperPath);
+const modelPath = ref(store.modelPath);
+const openvinoScriptPath = ref(store.openvinoScriptPath);
+const openvinoEnabled = ref(store.openvinoEnabled);
+
+const message = ref('');
+const probeResult = ref('');
+
+onMounted(async () => {
+  try {
+    const data = await api.getSettings();
+    whisperPath.value = (data as any).whisper_path || '';
+    modelPath.value = (data as any).model_path || '';
+    openvinoScriptPath.value = (data as any).openvino_script_path || '';
+    openvinoEnabled.value = !!(data as any).openvino_enabled;
+  } catch (e: any) {
+    message.value = '读取设置失败: ' + e.message;
+  }
+});
+
+// 事件处理函数：避免在模板中写类型
+function onWhisperPath(e: Event) {
+  whisperPath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onModelPath(e: Event) {
+  modelPath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onOpenvinoScriptPath(e: Event) {
+  openvinoScriptPath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onOpenvinoEnabled(e: Event) {
+  // md-switch 是 Web Component，selected 在 target 上
+  const t = e.target as any;
+  openvinoEnabled.value = !!t?.selected;
+}
+
+async function save() {
+  try {
+    await api.saveSettings({
+      whisper_path: whisperPath.value,
+      model_path: modelPath.value,
+      openvino_script_path: openvinoScriptPath.value,
+      openvino_enabled: openvinoEnabled.value,
+      openvino_shell: 'auto',
+    });
+    store.whisperPath = whisperPath.value;
+    store.modelPath = modelPath.value;
+    store.openvinoScriptPath = openvinoScriptPath.value;
+    store.openvinoEnabled = openvinoEnabled.value;
+    message.value = '保存成功';
+  } catch (e: any) {
+    message.value = '保存失败: ' + e.message;
+  }
+}
+
+async function testOpenVINO() {
+  try {
+    const res = await api.testOpenVINO();
+    message.value = JSON.stringify(res, null, 2);
+  } catch (e: any) {
+    message.value = '测试失败: ' + e.message;
+  }
+}
+
+async function probe() {
+  try {
+    const ff = await api.probeFfmpeg();
+    // 显式将 whisper 可执行路径传给后端进行探测
+    const wh = await api.probeWhisper(whisperPath.value || undefined);
+    probeResult.value = 'ffmpeg: ' + JSON.stringify(ff, null, 2) + '\n\nwhisper: ' + JSON.stringify(wh, null, 2);
+  } catch (e: any) {
+    probeResult.value = '探测失败: ' + e.message;
+  }
+}
+</script>
+
+<style scoped>
+.card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.row { margin: 12px 0; display: flex; align-items: center; }
+.msg { background: #111; color: #eee; padding: 12px; border-radius: 8px; max-height: 280px; overflow: auto; }
+</style>
+
+    web/src/pages/TasksPage.vue
+
+    去掉模板里的 (e:any)
+
+    创建任务时显式传递 whisper_exe（后端可用该字段直接调用设置好的路径）
+
+<template>
+  <section class="card">
+    <h2>任务</h2>
+
+    <div class="row">
+      <md-outlined-text-field
+        label="源文件服务器路径（暂用：后端可访问的绝对路径）"
+        :value="serverFilePath"
+        @input="onServerFilePath"
+        style="width: 520px"
+      />
+    </div>
+
+    <param-basic
+      :language="language"
+      :translate="translate"
+      :outputFormat="outputFormat"
+      @update:language="(v)=> language=v"
+      @update:translate="(v)=> translate=v"
+      @update:outputFormat="(v)=> outputFormat=v"
+    />
+
+    <param-advanced
+      :threads="threads"
+      :beamSize="beamSize"
+      :bestOf="bestOf"
+      @update:threads="(v)=> threads=v"
+      @update:beamSize="(v)=> beamSize=v"
+      @update:bestOf="(v)=> bestOf=v"
+    />
+
+    <div class="row">
+      <md-filled-button @click="createTask">创建任务</md-filled-button>
+      <md-filled-tonal-button style="margin-left: 8px" @click="refreshStatus" :disabled="!jobId">刷新状态</md-filled-tonal-button>
+    </div>
+
+    <div class="row" v-if="jobId"><strong>Job ID:</strong> {{ jobId }}</div>
+    <div class="row" v-if="statusText"><strong>状态:</strong> {{ statusText }}</div>
+
+    <log-console v-if="jobId" :jobId="jobId" />
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { api } from '../api/client';
+import { useSettingsStore } from '../stores/settings';
+import ParamBasic from '../components/ParamBasic.vue';
+import ParamAdvanced from '../components/ParamAdvanced.vue';
+import LogConsole from '../components/LogConsole.vue';
+
+const store = useSettingsStore();
+
+const serverFilePath = ref('');
+const language = ref('auto');
+const translate = ref(false);
+const outputFormat = ref('srt');
+
+const threads = ref(4);
+const beamSize = ref(5);
+const bestOf = ref(5);
+
+const jobId = ref('');
+const statusText = ref('');
+
+function onServerFilePath(e: Event) {
+  serverFilePath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+
+async function createTask() {
+  try {
+    if (!serverFilePath.value) throw new Error('请填写后端可访问的源文件绝对路径');
+    if (!store.modelPath || !store.whisperPath) throw new Error('请先到“设置”页面填写可执行与模型路径');
+    const payload = {
+      input_file: serverFilePath.value,
+      output_format: outputFormat.value,
+      whisper_exe: store.whisperPath, // 显式传递可执行路径
+      whisper_params: {
+        model: store.modelPath,
+        threads: threads.value,
+        beam_size: beamSize.value,
+        best_of: bestOf.value,
+        language: language.value,
+        translate: translate.value ? 'true' : 'false',
+      },
+    };
+    const res = await api.createTask(payload);
+    jobId.value = (res as any).job_id || '';
+    statusText.value = '任务已创建';
+  } catch (e: any) {
+    statusText.value = '创建失败: ' + e.message;
+  }
+}
+
+async function refreshStatus() {
+  try {
+    if (!jobId.value) return;
+    const res = await api.getTask(jobId.value);
+    statusText.value = JSON.stringify(res, null, 2);
+  } catch (e: any) {
+    statusText.value = '获取状态失败: ' + e.message;
+  }
+}
+</script>
+
+<style scoped>
+.card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.row { margin: 12px 0; display: flex; align-items: center; }
+</style>
+
+    web/src/components/ParamBasic.vue
+
+    去掉模板里的 (e:any)，改用脚本函数
+
+<template>
+  <div class="row">
+    <div style="margin-right: 16px">
+      <label class="label">语言</label>
+      <md-outlined-select @change="onLang" :value="language">
+        <md-select-option value="auto">auto</md-select-option>
+        <md-select-option value="en">en</md-select-option>
+        <md-select-option value="zh">zh</md-select-option>
+        <md-select-option value="ja">ja</md-select-option>
+        <md-select-option value="es">es</md-select-option>
+      </md-outlined-select>
+    </div>
+
+    <div style="margin-right: 16px">
+      <label class="label">翻译到英文</label>
+      <md-switch :selected="translate" @change="onTranslate"></md-switch>
+    </div>
+
+    <div>
+      <label class="label">输出格式</label>
+      <md-outlined-select @change="onFmt" :value="outputFormat">
+        <md-select-option value="srt">srt</md-select-option>
+        <md-select-option value="vtt">vtt</md-select-option>
+        <md-select-option value="json">json</md-select-option>
+        <md-select-option value="txt">txt</md-select-option>
+      </md-outlined-select>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  language: string,
+  translate: boolean,
+  outputFormat: string,
+}>();
+const emit = defineEmits(['update:language', 'update:translate', 'update:outputFormat']);
+
+function onLang(e: Event) {
+  const t = e.target as any;
+  emit('update:language', t?.value ?? '');
+}
+function onTranslate(e: Event) {
+  const t = e.target as any;
+  emit('update:translate', !!t?.selected);
+}
+function onFmt(e: Event) {
+  const t = e.target as any;
+  emit('update
+
+您说：
+继续
+ChatGPT 说：
+User analysis
+思考，持续 65 秒
+
+好的，继续把剩余部分补全并把所有模板里的 (e:any) 移除。同时改进 whisper 探测和任务创建时可执行路径的传递与兼容后端可能使用的 /whisper 测试路径。
+
+变更概览
+
+    移除所有模板中的 (e:any)，改为在脚本中定义事件处理函数。
+
+    api/client.ts 的 probeWhisper 增强：优先请求 /api/probe/whisper，失败时自动回退到 /whisper；支持 exe 参数。
+
+    vite.config.ts 增加对 /whisper 的代理，兼容你的后端“位于 /whisper 的测试 whisper 状态”。
+
+    任务创建 payload 新增 whisper_exe 字段，后端可直接使用该路径执行。
+
+    附后端改造建议，确保 command_builder.py 使用前端传入的 whisper_exe 或已保存设置。
+
+    web/src/components/ParamBasic.vue（补全并去掉 (e:any)）
+
+<template>
+  <div class="row">
+    <div style="margin-right: 16px">
+      <label class="label">语言</label>
+      <md-outlined-select @change="onLang" :value="language">
+        <md-select-option value="auto">auto</md-select-option>
+        <md-select-option value="en">en</md-select-option>
+        <md-select-option value="zh">zh</md-select-option>
+        <md-select-option value="ja">ja</md-select-option>
+        <md-select-option value="es">es</md-select-option>
+      </md-outlined-select>
+    </div>
+
+    <div style="margin-right: 16px">
+      <label class="label">翻译到英文</label>
+      <md-switch :selected="translate" @change="onTranslate"></md-switch>
+    </div>
+
+    <div>
+      <label class="label">输出格式</label>
+      <md-outlined-select @change="onFmt" :value="outputFormat">
+        <md-select-option value="srt">srt</md-select-option>
+        <md-select-option value="vtt">vtt</md-select-option>
+        <md-select-option value="json">json</md-select-option>
+        <md-select-option value="txt">txt</md-select-option>
+      </md-outlined-select>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  language: string,
+  translate: boolean,
+  outputFormat: string,
+}>();
+const emit = defineEmits(['update:language', 'update:translate', 'update:outputFormat']);
+
+function onLang(e: Event) {
+  const t = e.target as any;
+  emit('update:language', t?.value ?? '');
+}
+function onTranslate(e: Event) {
+  const t = e.target as any;
+  emit('update:translate', !!t?.selected);
+}
+function onFmt(e: Event) {
+  const t = e.target as any;
+  emit('update:outputFormat', t?.value ?? 'srt');
+}
+</script>
+
+<style scoped>
+.row { display: flex; align-items: center; margin: 12px 0; gap: 16px; }
+.label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+</style>
+
+    web/src/components/ParamAdvanced.vue（移除 (e:any)，改用函数）
+
+<template>
+  <div class="row">
+    <div class="col">
+      <label class="label">线程数 (--threads)</label>
+      <md-outlined-text-field
+        type="number"
+        :value="threads"
+        @input="onThreads"
+      />
+    </div>
+    <div class="col">
+      <label class="label">Beam Size (--beam-size)</label>
+      <md-outlined-text-field
+        type="number"
+        :value="beamSize"
+        @input="onBeamSize"
+      />
+    </div>
+    <div class="col">
+      <label class="label">Best Of (--best-of)</label>
+      <md-outlined-text-field
+        type="number"
+        :value="bestOf"
+        @input="onBestOf"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps<{ threads: number; beamSize: number; bestOf: number }>();
+const emit = defineEmits(['update:threads','update:beamSize','update:bestOf']);
+
+function onThreads(e: Event) {
+  const v = parseInt((e.target as HTMLInputElement)?.value || '0', 10);
+  emit('update:threads', Number.isFinite(v) ? v : 0);
+}
+function onBeamSize(e: Event) {
+  const v = parseInt((e.target as HTMLInputElement)?.value || '0', 10);
+  emit('update:beamSize', Number.isFinite(v) ? v : 0);
+}
+function onBestOf(e: Event) {
+  const v = parseInt((e.target as HTMLInputElement)?.value || '0', 10);
+  emit('update:bestOf', Number.isFinite(v) ? v : 0);
+}
+</script>
+
+<style scoped>
+.row { display: flex; gap: 16px; margin: 12px 0; }
+.col { display: flex; flex-direction: column; gap: 6px; width: 180px; }
+.label { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+</style>
+
+    web/src/pages/PreviewPage.vue（移除 (e:any)）
+
+<template>
+  <section class="card">
+    <h2>预览</h2>
+    <div class="row">
+      <md-outlined-text-field
+        label="媒体文件 URL（由后端静态或文件接口提供）"
+        :value="mediaUrl"
+        @input="onMediaUrl"
+        style="width: 520px"
+      />
+    </div>
+    <div class="row">
+      <md-outlined-text-field
+        label="字幕 VTT URL"
+        :value="vttUrl"
+        @input="onVttUrl"
+        style="width: 520px"
+      />
+    </div>
+
+    <div class="player">
+      <video v-if="isVideo" :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+        <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+      </video>
+      <audio v-else :src="mediaUrl" controls style="width: 100%; max-width: 800px">
+        <track :src="vttUrl" kind="subtitles" srclang="en" label="Subtitles" default/>
+      </audio>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+
+const mediaUrl = ref('');
+const vttUrl = ref('');
+const isVideo = computed(() => /\.(mp4|mkv|webm|mov)$/i.test(mediaUrl.value));
+
+function onMediaUrl(e: Event) {
+  mediaUrl.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onVttUrl(e: Event) {
+  vttUrl.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+</script>
+
+<style scoped>
+.card { padding: 16px; border-radius: 12px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+.row { margin: 12px 0; display: flex; align-items: center; }
+.player { margin-top: 16px; }
+</style>
+
+    web/src/api/client.ts（增强 probeWhisper，支持回退到 /whisper）
+
+const base = '';
+
+async function jsonGet<T>(url: string): Promise<T> {
+  const res = await fetch(base + url, { method: 'GET' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function jsonPost<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function formPost<T>(url: string, form: FormData): Promise<T> {
+  const res = await fetch(base + url, {
+    method: 'POST',
+    body: form,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<T>;
+}
+
+async function probeWhisperAuto<T>(exe?: string): Promise<T> {
+  const q = exe ? `?exe=${encodeURIComponent(exe)}` : '';
+  try {
+    // 新接口优先
+    return await jsonGet<T>(`/api/probe/whisper${q}`);
+  } catch {
+    // 兼容后端旧路径 /whisper
+    return await jsonGet<T>(`/whisper${q}`);
+  }
+}
+
+export const api = {
+  getSettings: () => jsonGet('/api/settings/'),
+  saveSettings: (settings: any) => jsonPost('/api/settings/', settings),
+
+  probeWhisper: (exe?: string) => probeWhisperAuto(exe),
+  probeFfmpeg: () => jsonGet('/api/probe/ffmpeg'),
+  testOpenVINO: () => jsonPost('/api/settings/openvino/test', {}),
+
+  createTask: (payload: any) => jsonPost('/api/tasks/', payload),
+  getTask: (jobId: string) => jsonGet(`/api/tasks/${jobId}`),
+  listFiles: (jobId: string) => jsonGet(`/api/files/${jobId}`),
+};
+
+    web/vite.config.ts（新增 /whisper 代理，兼容你的后端测试路径）
+
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:8000',
+        ws: true,
+        changeOrigin: true,
+      },
+      // 兼容后端存在 /whisper 的探测路径
+      '/whisper': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    outDir: 'dist',
+  },
+});
+
+    web/src/pages/SettingsPage.vue（你已替换为函数版事件，这里提醒：探测时传 exe）
+    已在你上一版中修正。如果未替换，请确认 probe() 中调用：
+
+const wh = await api.probeWhisper(whisperPath.value || undefined);
+
+    web/src/pages/TasksPage.vue（你已替换为函数版事件，这里提醒：任务创建时传 whisper_exe）
+    已在你上一版中修正。如果未替换，请确认 payload 中包含：
+
+whisper_exe: store.whisperPath
+
+后端改造建议（确保真正使用前端设置的可执行路径）
+
+    保存设置接口将 whisper_path 持久化。
+
+    探测 whisper 状态接口：
+
+        若收到 query 参数 exe，则优先使用该可执行路径。
+
+        否则读取持久化的 whisper_path。
+
+        没有路径则返回 400。
+
+示例（Python/FastAPI 风格伪代码，仅供你参考整合到现有项目中）：
+
+from fastapi import APIRouter, HTTPException, Query
+from .settings import load_settings
+import subprocess, shlex
+
+router = APIRouter()
+
+@router.get("/api/probe/whisper")
+def probe_whisper(exe: str | None = Query(default=None)):
+    whisper_exe = exe or load_settings().get("whisper_path")
+    if not whisper_exe:
+        raise HTTPException(400, "whisper executable path not configured")
+    try:
+        out = subprocess.check_output([whisper_exe, "-h"], stderr=subprocess.STDOUT, text=True, timeout=10)
+        return {"ok": True, "exe": whisper_exe, "output": out[:4000]}
+    except Exception as e:
+        raise HTTPException(500, f"failed to execute whisper: {e}")
+
+命令构建与任务执行（command_builder.py）
+
+    优先使用任务 payload 中的 whisper_exe（从前端传入）。
+
+    若 payload 未提供，则回退到持久化设置中的 whisper_path。
+
+    最终将 whisper_exe 放在命令第一项，避免 PATH 依赖。
+
+示例（伪代码）：
+
+def build_whisper_cmd(task: dict, settings: dict) -> list[str]:
+    exe = task.get("whisper_exe") or settings.get("whisper_path")
+    if not exe:
+        raise ValueError("whisper executable not configured")
+    params = task.get("whisper_params", {})
+    cmd = [exe]
+    if params.get("model"):
+        cmd += ["--model", params["model"]]
+    if params.get("threads"):
+        cmd += ["--threads", str(params["threads"])]
+    if params.get("beam_size"):
+        cmd += ["--beam-size", str(params["beam_size"])]
+    if params.get("best_of"):
+        cmd += ["--best-of", str(params["best_of"])]
+    if params.get("language") and params["language"] != "auto":
+        cmd += ["--language", params["language"]]
+    if str(params.get("translate", "")).lower() == "true":
+        cmd += ["--translate"]
+    # input/output
+    cmd += ["-f", task["input_file"], "-o", task.get("output_format", "srt")]
+    return cmd
+
+到这里：
+
+    你前端 ESLint 的 Parsing error: Unexpected token : 问题会消失（不再在模板里写类型）。
+
+    whisper 可执行路径会贯通：设置页保存 -> 探测接口带 exe -> 创建任务 payload 带 whisper_exe -> 后端命令构建强制使用该 exe。
+
+若还有具体接口路径或字段不一致，请把后端实际路由与字段名贴一下，我再帮你对齐前端调用。
+您说：
+顺便帮我写一下这段的python代码吧
+ChatGPT 说：
+User analysis
+思考，持续 167 秒
+
+好的，给你一套可直接运行的 FastAPI 后端示例代码，覆盖你提到的要点：
+
+    /api/probe/whisper 支持 exe 参数，未提供则读已保存设置 whisper_path；同时兼容旧路径 /whisper。
+
+    /api/tasks 创建任务时使用前端传来的 whisper_exe，未传则回退到设置中的 whisper_path。
+
+    command_builder.py 优先使用任务 payload 的 whisper_exe；构建命令时将可执行放在第一位。
+
+    任务运行前可选执行 OpenVINO 初始化脚本：在同一 shell 会话中 source/call 脚本后再执行 whisper，确保环境变量生效。
+
+    WebSocket 日志推送路径：/ws/logs/{job_id}，与前端对齐。
+
+运行方法
+
+    安装依赖：pip install "fastapi[standard]" uvicorn
+
+    启动：uvicorn server.app:app --reload
+
+    server/settings.py
+
+from __future__ import annotations
+from pydantic import BaseModel
+from pathlib import Path
+import json
+from typing import Any, Dict
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+SETTINGS_FILE = DATA_DIR / "settings.json"
+
+
+class Settings(BaseModel):
+    whisper_path: str | None = None
+    model_path: str | None = None
+    openvino_script_path: str | None = None
+    openvino_enabled: bool = False
+    openvino_shell: str = "auto"  # auto|bash|sh|cmd|pwsh
+
+
+def load_settings() -> Settings:
+    if SETTINGS_FILE.exists():
+        try:
+            raw = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+            return Settings(**raw)
+        except Exception:
+            pass
+    return Settings()
+
+
+def save_settings(s: Settings | Dict[str, Any]) -> Settings:
+    if not isinstance(s, Settings):
+        s = Settings(**s)
+    SETTINGS_FILE.write_text(s.model_dump_json(indent=2, ensure_ascii=False), encoding="utf-8")
+    return s
+
+    server/command_builder.py
+
+from __future__ import annotations
+from typing import Dict, List
+from shlex import quote as sh_quote
+
+def resolve_whisper_exe(task: Dict, settings: Dict) -> str:
+    exe = (task or {}).get("whisper_exe") or (settings or {}).get("whisper_path")
+    if not exe:
+        raise ValueError("whisper executable path not configured (task.whisper_exe or settings.whisper_path is required)")
+    return exe
+
+def build_whisper_cmd(task: Dict, settings: Dict) -> List[str]:
+    """
+    根据任务与设置构建命令行数组。
+    注意：以下参数名与你的 whisper 可执行一致性需确认，必要时按实际 CLI 调整。
+    """
+    exe = resolve_whisper_exe(task, settings)
+    params = (task or {}).get("whisper_params", {}) or {}
+    input_file = (task or {}).get("input_file")
+    output_format = (task or {}).get("output_format", "srt")
+
+    if not input_file:
+        raise ValueError("task.input_file is required")
+
+    cmd: List[str] = [exe]
+
+    # 常用参数映射（按你实际 CLI 调整）
+    if params.get("model"):
+        cmd += ["--model", str(params["model"])]
+    if params.get("threads") is not None:
+        cmd += ["--threads", str(params["threads"])]
+    if params.get("beam_size") is not None:
+        cmd += ["--beam-size", str(params["beam_size"])]
+    if params.get("best_of") is not None:
+        cmd += ["--best-of", str(params["best_of"])]
+    if params.get("language") and params["language"] != "auto":
+        cmd += ["--language", str(params["language"])]
+    # 布尔
+
+您说：
+这是我目前所有python的后端编写的代码，请你帮我根据前端vue代码修改一下以适配前端，并且我希望whisper的可执行文件路径都是持久化存储从文件调用的
+
+1. app/main.py — FastAPI 主入口
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
+
+from api.routes_tasks import router as tasks_router
+from api.routes_settings import router as settings_router
+from api.routes_files import router as files_router
+from api.routes_probe import router as probe_router
+
+app = FastAPI()
+
+# 允许跨域
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 可以更严格地限制来源
+    allow_credentials=True,
+    allow_methods=["*"],  # 或者限制允许的 HTTP 方法
+    allow_headers=["*"],
+)
+
+# 静态文件托管（前端构建好的文件）
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# 路由注册
+app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(settings_router, prefix="/api/settings", tags=["settings"])
+app.include_router(files_router, prefix="/api/files", tags=["files"])
+app.include_router(probe_router, prefix="/api/probe", tags=["probe"])
+
+# FastAPI 的其他相关设置可以在这里配置
+
+2. app/settings.json — 用户配置（路径等）
+
+{
+  "whisper_path": "/path/to/whisper-cli", 
+  "model_path": "/path/to/models",
+  "openvino_script_path": "/path/to/openvino_env.bat", 
+  "openvino_enabled": false,
+  "openvino_shell": "auto"
+}
+
+3. app/api/routes_settings.py — 设置路由
+
+from fastapi import APIRouter
+import json
+from pydantic import BaseModel
+from app.core import openvino_env
+
+router = APIRouter()
+
+class Settings(BaseModel):
+    whisper_path: str
+    model_path: str
+    openvino_script_path: str
+    openvino_enabled: bool
+    openvino_shell: str
+
+@router.get("/", response_model=Settings)
+async def get_settings():
+    with open("app/settings.json", "r") as f:
+        settings = json.load(f)
+    return settings
+
+@router.post("/")
+async def save_settings(settings: Settings):
+    # 更新配置文件
+    with open("app/settings.json", "w") as f:
+        json.dump(settings.dict(), f, indent=4)
+    return {"message": "Settings updated"}
+
+@router.post("/openvino/test")
+async def test_openvino_script():
+    # 执行 OpenVINO 脚本，并测试环境变量
+    success, output = openvino_env.run_openvino_script()
+    if success:
+        return {"message": "OpenVINO script executed successfully", "output": output}
+    return {"message": "Failed to execute OpenVINO script", "output": output}
+
+4. app/api/routes_tasks.py — 任务路由
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+import subprocess
+import os
+from app.core.process_runner import run_whisper_process
+from app.core.task_manager import TaskManager
+
+router = APIRouter()
+
+class TaskRequest(BaseModel):
+    input_file: str
+    output_format: str
+    whisper_params: dict
+
+# 用于管理任务
+task_manager = TaskManager()
+
+@router.post("/")
+async def create_task(task: TaskRequest):
+    job_id = task_manager.create_task(task.input_file, task.output_format, task.whisper_params)
+    return {"job_id": job_id}
+
+@router.get("/{job_id}")
+async def get_task_status(job_id: str):
+    status = task_manager.get_task_status(job_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return status
+
+@router.delete("/{job_id}")
+async def cancel_task(job_id: str):
+    success = task_manager.cancel_task(job_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task cancelled"}
+
+5. app/api/routes_probe.py — 探测 API（ffmpeg 和 whisper 可执行文件）
+
+from fastapi import APIRouter
+import subprocess
+
+router = APIRouter()
+
+@router.get("/ffmpeg")
+async def probe_ffmpeg():
+    try:
+        output = subprocess.check_output(["ffmpeg", "-version"], stderr=subprocess.STDOUT)
+        return {"ffmpeg_version": output.decode("utf-8")}
+    except subprocess.CalledProcessError:
+        return {"error": "ffmpeg not found"}
+
+@router.get("/whisper")
+async def probe_whisper():
+    try:
+        output = subprocess.check_output(["whisper-cli", "-h"], stderr=subprocess.STDOUT)
+        return {"whisper_available": True}
+    except subprocess.CalledProcessError:
+        return {"error": "whisper-cli not found"}
+
+6. app/core/openvino_env.py — OpenVINO 脚本执行
+
+import subprocess
+import os
+
+def run_openvino_script():
+    script_path = "app/settings.json"
+    # 读取 settings 文件
+    with open(script_path, "r") as f:
+        settings = json.load(f)
+
+    script = settings.get("openvino_script_path")
+    if not script or not os.path.exists(script):
+        return False, "OpenVINO script not found"
+
+    # 执行 OpenVINO 脚本
+    try:
+        result = subprocess.check_output([script], shell=True, stderr=subprocess.STDOUT)
+        return True, result.decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        return False, e.output.decode('utf-8')
+
+7. app/core/task_manager.py — 任务管理器（任务创建/查询/取消）
+
+import uuid
+import os
+import shutil
+from app.whisper.command_builder import build_whisper_command
+from app.core.process_runner import run_whisper_process
+
+class TaskManager:
+    def __init__(self):
+        self.tasks = {}
+
+    def create_task(self, input_file: str, output_format: str, whisper_params: dict):
+        job_id = str(uuid.uuid4())
+        task_dir = os.path.join("app/runs", job_id)
+        os.makedirs(task_dir, exist_ok=True)
+        
+        command = build_whisper_command(input_file, output_format, whisper_params)
+        process = run_whisper_process(command, job_id, task_dir)
+        
+        self.tasks[job_id] = {
+            "status": "in-progress",
+            "process": process,
+            "task_dir": task_dir
+        }
+        return job_id
+
+    def get_task_status(self, job_id: str):
+        task = self.tasks.get(job_id)
+        if not task:
+            return None
+        return task
+
+    def cancel_task(self, job_id: str):
+        task = self.tasks.get(job_id)
+        if not task:
+            return False
+        task["process"].terminate()
+        self.tasks.pop(job_id, None)
+        return True
+
+8. app/whisper/command_builder.py — Whisper 命令构建
+
+def build_whisper_command(input_file, output_format, whisper_params):
+    command = [
+        "whisper-cli",
+        "-f", input_file,
+        "-o", whisper_params.get("output_file", "output"),
+        "--model", whisper_params["model_path"],
+    ]
+    
+    for param, value in whisper_params.items():
+        if param in ["output_format", "model_path"]:  # Skip model path and output format
+            continue
+        command.extend([f"--{param}", str(value)])
+
+    return command
+
+9. app/core/process_runner.py — 子进程管理与日志输出
+
+import subprocess
+import os
+
+def run_whisper_process(command, job_id, task_dir):
+    # 启动 Whisper 命令并将输出保存到日志文件
+    log_file = os.path.join(task_dir, "log.txt")
+    with open(log_file, "w") as log:
+        process = subprocess.Popen(command, stdout=log, stderr=log, text=True)
+    return process
+
+app/api/routes_files.py
+
+import os
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
+from app.core.path_guard import is_valid_file_path
+from app.core.task_manager import TaskManager
+
+router = APIRouter()
+
+# 用于管理任务
+task_manager = TaskManager()
+
+@router.get("/{job_id}")
+async def list_files(job_id: str):
+    """
+    获取指定任务 ID 下的所有生成文件列表
+    """
+    task = task_manager.get_task_status(job_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    task_dir = task["task_dir"]
+    
+    # 获取该目录下的所有文件
+    try:
+        files = [f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))]
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Task files not found")
+    
+    return {"files": files}
+
+
+@router.get("/{job_id}/{file_name}")
+async def download_file(job_id: str, file_name: str):
+    """
+    下载指定任务 ID 下的文件
+    """
+    task = task_manager.get_task_status(job_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    task_dir = task["task_dir"]
+    file_path = os.path.join(task_dir, file_name)
+    
+    # 检查文件是否存在
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # 验证文件路径安全
+    if not is_valid_file_path(file_path, task_dir):
+        raise HTTPException(status_code=403, detail="Forbidden file access")
+
+    # 返回文件响应
+    return FileResponse(file_path)
+
+
+# 安全检查函数：确保文件路径在任务目录范围内
+def is_valid_file_path(file_path: str, task_dir: str) -> bool:
+    """
+    验证文件路径是否在指定的任务目录内
+    """
+    # 确保文件路径在任务目录内，避免路径穿越攻击
+    return os.path.commonpath([file_path, task_dir]) == task_dir
+
+1. app/config.py — 配置文件，读取 settings.json 或环境变量
+
+import json
+import os
+
+class Config:
+    def __init__(self, config_path="app/settings.json"):
+        self.config_path = config_path
+        self.settings = self.load_settings()
+
+    def load_settings(self):
+        """加载设置文件"""
+        if os.path.exists(self.config_path):
+            with open(self.config_path, "r") as f:
+                return json.load(f)
+        else:
+            raise FileNotFoundError(f"Configuration file {self.config_path} not found.")
+
+    def get(self, key, default=None):
+        """获取配置项，若不存在则返回默认值"""
+        return self.settings.get(key, default)
+    
+    def set(self, key, value):
+        """设置配置项并保存到文件"""
+        self.settings[key] = value
+        with open(self.config_path, "w") as f:
+            json.dump(self.settings, f, indent=4)
+
+2. app/core/path_guard.py — 路径白名单、大小限制、MIME 校验
+
+import os
+
+def is_valid_file_path(file_path: str, task_dir: str) -> bool:
+    """
+    验证文件路径是否在指定的任务目录内
+    """
+    # 确保文件路径在任务目录内，避免路径穿越攻击
+    return os.path.commonpath([file_path, task_dir]) == task_dir
+
+def check_file_size(file_path: str, max_size_mb: int) -> bool:
+    """
+    检查文件大小，防止上传过大的文件
+    """
+    file_size = os.path.getsize(file_path) / (1024 * 1024)  # 转换为 MB
+    return file_size <= max_size_mb
+
+def check_file_mime(file_path: str, allowed_mime_types: list) -> bool:
+    """
+    检查文件 MIME 类型，防止上传不允许的文件类型
+    """
+    import mimetypes
+    mime_type, _ = mimetypes.guess_type(file_path)
+    return mime_type in allowed_mime_types
+
+3. app/core/openvino_env.py — 执行 .bat/.sh 文件以设置 OpenVINO 环境变量
+
+import subprocess
+import os
+import json
+
+def run_openvino_script():
+    """执行 OpenVINO 脚本，并测试环境变量"""
+    # 读取 settings 文件
+    with open("app/settings.json", "r") as f:
+        settings = json.load(f)
+
+    script = settings.get("openvino_script_path")
+    if not script or not os.path.exists(script):
+        return False, "OpenVINO script not found"
+
+    # 执行 OpenVINO 脚本
+    try:
+        result = subprocess.check_output([script], shell=True, stderr=subprocess.STDOUT)
+        return True, result.decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        return False, e.output.decode('utf-8')
+
+4. app/core/task_manager.py — 任务状态机、并发/队列、取消
+
+import uuid
+import os
+from app.whisper.command_builder import build_whisper_command
+from app.core.process_runner import run_whisper_process
+
+class TaskManager:
+    def __init__(self):
+        self.tasks = {}
+
+    def create_task(self, input_file: str, output_format: str, whisper_params: dict):
+        job_id = str(uuid.uuid4())
+        task_dir = os.path.join("app/runs", job_id)
+        os.makedirs(task_dir, exist_ok=True)
+        
+        command = build_whisper_command(input_file, output_format, whisper_params)
+        process = run_whisper_process(command, job_id, task_dir)
+        
+        self.tasks[job_id] = {
+            "status": "in-progress",
+            "process": process,
+            "task_dir": task_dir
+        }
+        return job_id
+
+    def get_task_status(self, job_id: str):
+        task = self.tasks.get(job_id)
+        if not task:
+            return None
+        return task
+
+    def cancel_task(self, job_id: str):
+        task = self.tasks.get(job_id)
+        if not task:
+            return False
+        task["process"].terminate()
+        self.tasks.pop(job_id, None)
+        return True
+
+5. app/whisper/cli_args.py — UI 参数 → whisper-cli 参数映射与校验
+
+def map_ui_params_to_whisper_cli_params(ui_params):
+    """
+    将 UI 中的参数映射为 whisper-cli 的命令行参数
+    """
+    whisper_params = []
+    
+    if "language" in ui_params:
+        whisper_params.append(f"--language {ui_params['language']}")
+    if "model" in ui_params:
+        whisper_params.append(f"--model {ui_params['model']}")
+    if "temperature" in ui_params:
+        whisper_params.append(f"--temperature {ui_params['temperature']}")
+    if "output_srt" in ui_params and ui_params["output_srt"]:
+        whisper_params.append("--output-srt")
+    
+    # 更多参数的映射...
+    
+    return whisper_params
+
+6. app/whisper/command_builder.py — 生成命令行（含 quoting/escape）
+
+def build_whisper_command(input_file, output_format, whisper_params):
+    """
+    生成 whisper-cli 命令行
+    """
+    command = [
+        "whisper-cli",
+        "-f", input_file,
+        "-o", whisper_params.get("output_file", "output"),
+        "--model", whisper_params["model"],
+    ]
+    
+    # 动态附加命令行参数
+    for param, value in whisper_params.items():
+        if param in ["output_file", "model"]:
+            continue  # 已经加过了
+        command.extend([f"--{param}", str(value)])
+
+    return command
+
+7. app/whisper/ffmpeg.py — ffprobe 探测、必要的转码（16k/mono/pcm_s16le）
+
+import subprocess
+import os
+
+def ffmpeg_probe(file_path):
+    """
+    使用 ffprobe 探测音频文件的属性（如采样率、声道）
+    """
+    try:
+        result = subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "stream=sample_rate,channels", "-of", "default=noprint_wrappers=1", file_path])
+        return result.decode("utf-8")
+    except subprocess.CalledProcessError:
+        return None
+
+def convert_audio_to_wav(input_file, output_file):
+    """
+    转换音频文件到 16kHz 单声道 WAV 格式
+    """
+    command = [
+        "ffmpeg", "-i", input_file,
+        "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", output_file
+    ]
+    try:
+        subprocess.run(command, check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        return False
+
+8. app/whisper/outputs.py — 输出落地（txt/vtt/srt/json 等）
+
+import os
+
+def save_output(output_dir, output_format, content):
+    """
+    将识别结果保存为指定格式的文件
+    """
+    output_path = os.path.join(output_dir, f"output.{output_format}")
+    
+    if output_format == "txt":
+        with open(output_path, "w") as f:
+            f.write(content)
+    elif output_format == "json":
+        import json
+        with open(output_path, "w") as f:
+            json.dump(content, f)
+    elif output_format == "srt" or output_format == "vtt":
+        with open(output_path, "w") as f:
+            f.write(content)
+    else:
+        raise ValueError("Unsupported output format")
+    
+    return output_path
+
+9. app/whisper/srt_to_vtt.py — SRT → VTT 转换
+
+def convert_srt_to_vtt(srt_file):
+    """
+    将 SRT 文件转换为 VTT 文件
+    """
+    vtt_file = srt_file.replace(".srt", ".vtt")
+    
+    with open(srt_file, "r") as srt, open(vtt_file, "w") as vtt:
+        vtt.write("WEBVTT\n\n")
+        
+        for line in srt:
+            # 简单的 SRT 到 VTT 的转换（这里只是基础转换，可能需要根据 SRT 格式更复杂的处理）
+            vtt.write(line)
+    
+    return vtt_file
+ChatGPT 说：
+User analysis
+思考，持续 64 秒
+
+好的，我已将你的后端按前端最新的调用方式适配，并确保“Whisper 可执行文件路径”始终从持久化文件 app/settings.json 读取与使用。修改点概览：
+
+    所有执行 whisper 的地方都从 settings.json 读取 whisper_path，不再依赖请求体传入。
+
+    /api/probe/whisper 使用持久化的 whisper_path 探测；如未配置，返回 400。
+
+    任务创建走统一的 TaskManager 单例，避免不同路由各自实例导致状态不同步。
+
+    build_whisper_command 统一从配置读取 whisper_path，参数映射与前端 UI 一致（threads/beam_size/best_of/language/translate）。
+
+    进程执行 cwd 固定为任务目录，输出、日志归档在每个任务目录下。
+
+    routes_files 改用 TaskManager 单例，返回可序列化的状态与文件列表。
+
+    （可选）新增 /ws/logs/{job_id} WebSocket 实时推送日志，匹配前端 LogConsole。若暂不需要，可忽略此文件与 main.py 内的 ws 路由注册。
+
+请按以下文件内容覆盖你的项目（仅列出需要修改或新增的文件）：
+
+    app/config.py
+
+import json
+import os
+from typing import Any
+
+DEFAULT_SETTINGS_PATH = "app/settings.json"
+
+class Config:
+    def __init__(self, config_path: str = DEFAULT_SETTINGS_PATH):
+        self.config_path = config_path
+        self.settings = self.load_settings()
+
+    def load_settings(self) -> dict[str, Any]:
+        if os.path.exists(self.config_path):
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        # 默认结构，避免 KeyError
+        return {
+            "whisper_path": "",
+            "model_path": "",
+            "openvino_script_path": "",
+            "openvino_enabled": False,
+            "openvino_shell": "auto",
+        }
+
+    def get(self, key: str, default=None):
+        return self.settings.get(key, default)
+
+    def set(self, key: str, value):
+        self.settings[key] = value
+        self.save()
+
+    def save(self):
+        os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(self.settings, f, indent=4, ensure_ascii=False)
+
+config = Config()
+
+    app/api/routes_settings.py
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from app.config import config
+from app.core import openvino_env
+
+router = APIRouter()
+
+class Settings(BaseModel):
+    whisper_path: str
+    model_path: str
+    openvino_script_path: str
+    openvino_enabled: bool
+    openvino_shell: str
+
+@router.get("/", response_model=Settings)
+async def get_settings():
+    s = config.settings
+    return Settings(
+        whisper_path=s.get("whisper_path", ""),
+        model_path=s.get("model_path", ""),
+        openvino_script_path=s.get("openvino_script_path", ""),
+        openvino_enabled=bool(s.get("openvino_enabled", False)),
+        openvino_shell=s.get("openvino_shell", "auto"),
+    )
+
+@router.post("/")
+async def save_settings(settings: Settings):
+    config.set("whisper_path", settings.whisper_path)
+    config.set("model_path", settings.model_path)
+    config.set("openvino_script_path", settings.openvino_script_path)
+    config.set("openvino_enabled", settings.openvino_enabled)
+    config.set("openvino_shell", settings.openvino_shell)
+    return {"message": "Settings updated"}
+
+@router.post("/openvino/test")
+async def test_openvino_script():
+    success, output = openvino_env.run_openvino_script()
+    if success:
+        return {"message": "OpenVINO script executed successfully", "output": output}
+    raise HTTPException(status_code=500, detail={"message": "Failed to execute OpenVINO script", "output": output})
+
+    app/api/routes_probe.py
+
+from fastapi import APIRouter, HTTPException
+import subprocess
+from app.config import config
+import os
+
+router = APIRouter()
+
+@router.get("/ffmpeg")
+async def probe_ffmpeg():
+    try:
+        output = subprocess.check_output(["ffmpeg", "-version"], stderr=subprocess.STDOUT)
+        return {"ffmpeg_version": output.decode("utf-8")}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ffmpeg not found or failed: {e}")
+
+@router.get("/whisper")
+async def probe_whisper():
+    whisper_exe = config.get("whisper_path")
+    if not whisper_exe or not os.path.exists(whisper_exe):
+        raise HTTPException(status_code=400, detail="whisper executable path is not configured or not found in settings.json")
+    try:
+        output = subprocess.check_output([whisper_exe, "-h"], stderr=subprocess.STDOUT)
+
+您说：
+继续
+ChatGPT 说：
+User analysis
+思考，持续 65 秒
+
+好的，按你的现有后端结构进行了完整适配，满足：
+
+    前端调用不再传 whisper_exe，所有对 whisper 的调用统一从 app/settings.json 中读取 whisper_path。
+
+    /api/probe/whisper 使用持久化的 whisper_path 探测；同时增加兼容端点 /whisper（前端若走旧路径也可用）。
+
+    任务管理 TaskManager 采用单例，routes_tasks 与 routes_files 使用同一个实例，状态一致。
+
+    command_builder 将 whisper_path 放在命令第一项，并兼容前端传入的参数键（model/threads/beam_size/best_of/language/translate），translate 为真时添加 --translate。
+
+    run_whisper_process 在任务目录内执行，输出日志到 log.txt；如开启 openvino_enabled 则先执行脚本再执行 whisper（在同一 shell 会话中确保环境变量生效）。
+
+    可选：新增 WebSocket 日志推送 /ws/logs/{job_id}，与前端 LogConsole 对齐。如果暂不需要，忽略 routes_ws.py 与 main.py 中的 include。
+
+请将下面文件替换/新增到你的项目中。
+
+    app/api/routes_probe.py
+
+from fastapi import APIRouter, HTTPException
+import subprocess
+import os
+from app.config import config
+
+# 主路由（挂载到 /api/probe）
+router = APIRouter()
+# 兼容路由（直接挂载到根 /whisper）
+router_compat = APIRouter()
+
+
+def _probe_whisper_impl() -> dict:
+    whisper_exe = config.get("whisper_path")
+    if not whisper_exe:
+        raise HTTPException(status_code=400, detail="whisper executable path is not configured in settings.json (whisper_path)")
+    if not os.path.exists(whisper_exe):
+        raise HTTPException(status_code=400, detail=f"whisper executable not found: {whisper_exe}")
+
+    try:
+        output = subprocess.check_output([whisper_exe, "-h"], stderr=subprocess.STDOUT)
+        text = output.decode("utf-8", errors="ignore")
+        return {"whisper_available": True, "exe": whisper_exe, "help": text[:4000]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"failed to execute whisper: {e}")
+
+
+@router.get("/ffmpeg")
+async def probe_ffmpeg():
+    try:
+        output = subprocess.check_output(["ffmpeg", "-version"], stderr=subprocess.STDOUT)
+        return {"ffmpeg_version": output.decode("utf-8", errors="ignore")}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ffmpeg not found or failed: {e}")
+
+
+@router.get("/whisper")
+async def probe_whisper():
+    return _probe_whisper_impl()
+
+
+# 兼容旧路径：/whisper（便于前端回退）
+@router_compat.get("/whisper")
+async def probe_whisper_compat():
+    return _probe_whisper_impl()
+
+    app/whisper/command_builder.py
+
+from __future__ import annotations
+from typing import Dict, List, Any
+from app.config import config
+
+
+def _truthy(v: Any) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    s = str(v).strip().lower()
+    return s in ("1", "true", "yes", "on")
+
+
+def build_whisper_command(input_file: str, output_format: str, whisper_params: Dict[str, Any]) -> List[str]:
+    """
+    生成 whisper 命令行（数组形式）。
+    - 可执行文件：始终使用 settings.json 的 whisper_path
+    - 模型：优先 whisper_params.model，否则回退 settings.json 的 model_path
+    - 参数兼容前端：threads, beam_size, best_of, language, translate
+    - output_format 单独传入（srt/vtt/json/txt），根据你的 CLI 实际参数名必要时调整
+    """
+    exe = config.get("whisper_path") or ""
+    if not exe:
+        raise ValueError("whisper_path is not configured in settings.json")
+    model = whisper_params.get("model") or config.get("model_path") or ""
+    if not model:
+        raise ValueError("model path is not provided (whisper_params.model or settings.json model_path)")
+
+    # 你原来的 CLI 例子用法参考：
+    # whisper-cli -f <input> -o <output_base> --model <model> --threads N --beam-size N --best-of N --language xx --translate
+    # 如果 output_base 需要，默认使用 "output"（会在任务目录内执行）
+    output_base = whisper_params.get("output_file", "output")
+
+    cmd: List[str] = [exe, "-f", input_file, "-o", output_base, "--model", model]
+
+    # 数值参数
+    if "threads" in whisper_params and whisper_params["threads"] is not None:
+        cmd += ["--threads", str(whisper_params["threads"])]
+    if "beam_size" in whisper_params and whisper_params["beam_size"] is not None:
+        cmd += ["--beam-size", str(whisper_params["beam_size"])]
+    if "best_of" in whisper_params and whisper_params["best_of"] is not None:
+        cmd += ["--best-of", str(whisper_params["best_of"])]
+
+    # 语言
+    language = whisper_params.get("language")
+    if language and str(language).lower() != "auto":
+        cmd += ["--language", str(language)]
+
+    # 布尔开关：translate
+    if _truthy(whisper_params.get("translate")):
+        cmd += ["--translate"]
+
+    # 输出格式（如果你的 CLI 用法不同，请在此改为对应参数）
+    # 例如有的 CLI 用 --output-format，有的用 -of 等
+    if output_format:
+        cmd += ["--output-format", output_format]
+
+    return cmd
+
+    app/core/process_runner.py
+
+import subprocess
+import os
+import sys
+from typing import List, Tuple
+from app.config import config
+
+
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
+def _build_shell_command_with_openvino(cmd_list: List[str]) -> Tuple[str, bool]:
+    """
+    将 OpenVINO 脚本与 whisper 命令拼在同一个 shell 会话中执行。
+    返回：(shell_command, use_shell=True)
+    """
+    script = config.get("openvino_script_path") or ""
+    if not script:
+        # 没有脚本就返回原始命令
+        return " ".join(subprocess.list2cmdline([x]) for x in cmd_list), True
+
+    # 注意：在 Windows 需要 call，Linux/Mac 需要 source
+    quoted_whisper = subprocess.list2cmdline(cmd_list)
+    if _is_windows():
+        # cmd /C "call script && whisper ..."
+        shell_cmd = f'call "{script}" && {quoted_whisper}'
+        return shell_cmd, True
+    else:
+        # bash -lc 'source script && whisper ...'
+        # 在 Popen 中将使用: executable="/bin/bash"
+        shell_cmd = f'source "{script}" && {quoted_whisper}'
+        return shell_cmd, True
+
+
+def run_whisper_process(command: List[str], job_id: str, task_dir: str):
+    """
+    在 task_dir 内启动 Whisper 命令行，输出日志到 log.txt。
+    如果 openvino_enabled=True，则在同一 shell 会话先执行 OpenVINO 脚本。
+    """
+    os.makedirs(task_dir, exist_ok=True)
+    log_file = os.path.join(task_dir, "log.txt")
+
+    use_openvino = bool(config.get("openvino_enabled", False))
+
+    if use_openvino:
+        shell_cmd, use_shell = _build_shell_command_with_openvino(command)
+        with open(log_file, "w", encoding="utf-8") as log:
+            if _is_windows():
+                # Windows: 使用 cmd.exe
+                process = subprocess.Popen(
+                    shell_cmd,
+                    cwd=task_dir,
+                    stdout=log,
+                    stderr=log,
+                    text=True,
+                    shell=True,
+                )
+            else:
+                # POSIX: 使用 bash -lc
+                process = subprocess.Popen(
+                    ["bash", "-lc", shell_cmd],
+                    cwd=task_dir,
+                    stdout=log,
+                    stderr=log,
+                    text=True,
+                )
+        return process
+
+    # 不使用 OpenVINO，直接运行
+    with open(log_file, "w", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            command,
+            cwd=task_dir,
+            stdout=log,
+            stderr=log,
+            text=True,
+        )
+    return process
+
+    app/core/task_manager.py
+
+import uuid
+import os
+from typing import Dict, Any, Optional
+from app.whisper.command_builder import build_whisper_command
+from app.core.process_runner import run_whisper_process
+
+RUNS_DIR = "app/runs"
+os.makedirs(RUNS_DIR, exist_ok=True)
+
+
+class TaskManager:
+    def __init__(self):
+        # job_id -> { status, process, task_dir }
+        self.tasks: Dict[str, Dict[str, Any]] = {}
+
+    def create_task(self, input_file: str, output_format: str, whisper_params: dict) -> str:
+        job_id = str(uuid.uuid4())
+        task_dir = os.path.join(RUNS_DIR, job_id)
+        os.makedirs(task_dir, exist_ok=True)
+
+        command = build_whisper_command(input_file, output_format, whisper_params or {})
+        process = run_whisper_process(command, job_id, task_dir)
+
+        self.tasks[job_id] = {
+            "status": "in-progress",
+            "pid": process.pid,
+            "process": process,
+            "task_dir": task_dir,
+        }
+        return job_id
+
+    def get_task_status(self, job_id: str) -> Optional[Dict[str, Any]]:
+        task = self.tasks.get(job_id)
+        if not task:
+            return None
+
+        proc = task.get("process")
+        if proc and proc.poll() is not None:
+            task["status"] = "finished" if proc.returncode == 0 else "failed"
+            task["returncode"] = proc.returncode
+        return {
+            "job_id": job_id,
+            "status": task.get("status"),
+            "pid": task.get("pid"),
+            "returncode": task.get("returncode", None),
+            "task_dir": task.get("task_dir"),
+        }
+
+    def cancel_task(self, job_id: str) -> bool:
+        task = self.tasks.get(job_id)
+        if not task:
+            return False
+        proc = task.get("process")
+        if proc and proc.poll() is None:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+        self.tasks.pop(job_id, None)
+        return True
+
+
+# 单例：供所有路由共享
+task_manager = TaskManager()
+
+    app/api/routes_tasks.py
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Dict, Any
+from app.core.task_manager import task_manager
+
+router = APIRouter()
+
+class TaskRequest(BaseModel):
+    input_file: str
+    output_format: str
+    whisper_params: Dict[str, Any] = {}
+
+@router.post("/")
+async def create_task(task: TaskRequest):
+    try:
+        job_id = task_manager.create_task(task.input_file, task.output_format, task.whisper_params)
+        return {"job_id": job_id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/{job_id}")
+async def get_task_status(job_id: str):
+    status = task_manager.get_task_status(job_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return status
+
+@router.delete("/{job_id}")
+async def cancel_task(job_id: str):
+    success = task_manager.cancel_task(job_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task cancelled"}
+
+    app/api/routes_files.py
+
+import os
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
+from app.core.task_manager import task_manager
+
+router = APIRouter()
+
+def is_valid_file_path(file_path: str, task_dir: str) -> bool:
+    return os.path.commonpath([os.path.abspath(file_path), os.path.abspath(task_dir)]) == os.path.abspath(task_dir)
+
+@router.get("/{job_id}")
+async def list_files(job_id: str):
+    task = task_manager.get_task_status(job_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task_dir = task["task_dir"]
+    if not os.path.isdir(task_dir):
+        raise HTTPException(status_code=404, detail="Task dir not found")
+
+    files = [f for f in os.listdir(task_dir) if os.path.isfile(os.path.join(task_dir, f))]
+    return {"files": files}
+
+@router.get("/{job_id}/{file_name}")
+async def download_file(job_id: str, file_name: str):
+    task = task_manager.get_task_status(job_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task_dir = task["task_dir"]
+    file_path = os.path.join(task_dir, file_name)
+
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not is_valid_file_path(file_path, task_dir):
+        raise HTTPException(status_code=403, detail="Forbidden file access")
+
+    return FileResponse(file_path)
+
+    app/core/openvino_env.py
+
+import subprocess
+import os
+import json
+
+def run_openvino_script():
+    """
+    仅执行 OpenVINO 初始化脚本并返回输出结果，用于“测试脚本”按钮。
+    实际在任务运行时会在同一 shell 会话中先执行脚本再执行 whisper（见 process_runner）。
+    """
+    with open("app/settings.json", "r", encoding="utf-8") as f:
+        settings = json.load(f)
+
+    script = settings.get("openvino_script_path")
+    if not script or not os.path.exists(script):
+        return False, "OpenVINO script not found"
+
+    try:
+        # Windows .bat 通常需要通过 cmd 调用；Linux/Mac 通过 bash 调用
+        if os.name == "nt":
+            result = subprocess.check_output(f'cmd /C call "{script}"', shell=True, stderr=subprocess.STDOUT)
+        else:
+            result = subprocess.check_output(f'bash -lc \'source "{script}" && env\'', shell=True, stderr=subprocess.STDOUT)
+        return True, result.decode('utf-8', errors='ignore')
+    except subprocess.CalledProcessError as e:
+        return False, e.output.decode('utf-8', errors='ignore')
+
+    app/main.py（新增兼容路由与可选 WS 路由注册）
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from api.routes_tasks import router as tasks_router
+from api.routes_settings import router as settings_router
+from api.routes_files import router as files_router
+from api.routes_probe import router as probe_router, router_compat as probe_router_compat
+
+# 可选：WebSocket 日志（若使用前端 LogConsole）
+try:
+    from api.routes_ws import router as ws_router
+    HAS_WS = True
+except Exception:
+    HAS_WS = False
+
+import os
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 静态（若有构建产物）
+if os.path.isdir("app/static"):
+    app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# 路由注册
+app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(settings_router, prefix="/api/settings", tags=["settings"])
+app.include_router(files_router, prefix="/api/files", tags=["files"])
+app.include_router(probe_router, prefix="/api/probe", tags=["probe"])
+
+# 兼容旧路径 /whisper
+app.include_router(probe_router_compat, prefix="", tags=["probe-compat"])
+
+# 可选 WS：/ws/logs/{job_id}
+if HAS_WS:
+    app.include_router(ws_router, prefix="/ws", tags=["ws"])
+
+    可选：app/api/routes_ws.py（前端 LogConsole 对应的 WebSocket 日志推送）
+
+import asyncio
+import os
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from app.core.task_manager import task_manager
+
+router = APIRouter()
+
+@router.websocket("/logs/{job_id}")
+async def logs_ws(websocket: WebSocket, job_id: str):
+    await websocket.accept()
+    try:
+        status = task_manager.get_task_status(job_id)
+        if not status:
+            await websocket.send_text("Task not found")
+            await websocket.close()
+            return
+
+        task_dir = status["task_dir"]
+        log_path = os.path.join(task_dir, "log.txt")
+        # 确保日志文件存在
+        os.makedirs(task_dir, exist_ok=True)
+        open(log_path, "a", encoding="utf-8").close()
+
+        # 简易 tail -f
+        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+            f.seek(0, os.SEEK_END)
+            while True:
+                line = f.readline()
+                if line:
+                    await websocket.send_text(line.rstrip("\n"))
+                else:
+                    await asyncio.sleep(0.5)
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_text(f"WS error: {e}")
+        except Exception:
+            pass
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
+说明与对接要点
+
+    前端 SettingsPage.vue 调用 /api/settings/ 读写 settings.json，本后端已对齐。
+
+    前端探测 whisper 时请求 /api/probe/whisper（或旧路径 /whisper），后端统一使用 settings.json 的 whisper_path，忽略 query 参数，满足“都是持久化存储从文件调用”的要求。
+
+    创建任务时，前端发送 input_file、output_format、whisper_params，本后端从 settings.json 读取 whisper_path 和默认 model_path；translate 字段支持 true/"true"/1 等。
+
+    TaskManager 单例 task_manager 在 routes_tasks 与 routes_files 共享，确保状态一致。
+
+    如使用前端的 WebSocket 日志组件，确保在 main.py 已 include ws 路由，并且 Vite 代理了 /ws 到后端（你之前配置已包含）。
+
+如果你的 whisper 实际 CLI 与示例不同（例如输出格式参数名不是 --output-format，或输入输出参数不一致），请把实际 CLI 说明贴给我，我再把 command_builder 精准对齐。
+您说：
+请帮我修改并增加以下功能：1. 修复由ws连接的运行日志，现在看不到日志，日志只能输出到文件 2. 现在每次刷新后都需要去设置页面保存一下设置，否则会提示请先到“设置”页面填写可执行与模型路径 3. 运行参数不对，按照以下cli帮助修改 4. 我希望所有的参数都能在任务创建页面进行设置，可以设计不同参数组的菜单展开，并且每次都默认启用参数的默认设置，再添加一个可选保存我当前的配置到浏览器本地的功能 5. 创建任务时不仅可以填写源文件路径、还可以用文件选择器选择（不过最后还是传递路径给api）。usage: whisper-cli [options] file0 file1 ...
+supported audio formats: flac, mp3, ogg, wav
+options:
+  -h,        --help              [default] show this help message and exit
+  -t N,      --threads N         [4      ] number of threads to use during computation
+  -p N,      --processors N      [1      ] number of processors to use during computation
+  -ot N,     --offset-t N        [0      ] time offset in milliseconds
+  -on N,     --offset-n N        [0      ] segment index offset
+  -d  N,     --duration N        [0      ] duration of audio to process in milliseconds
+  -mc N,     --max-context N     [-1     ] maximum number of text context tokens to store
+  -ml N,     --max-len N         [0      ] maximum segment length in characters
+  -sow,      --split-on-word     [false  ] split on word rather than on token
+  -bo N,     --best-of N         [5      ] number of best candidates to keep
+  -bs N,     --beam-size N       [5      ] beam size for beam search
+  -ac N,     --audio-ctx N       [0      ] audio context size (0 - all)
+  -wt N,     --word-thold N      [0.01   ] word timestamp probability threshold
+  -et N,     --entropy-thold N   [2.40   ] entropy threshold for decoder fail
+  -lpt N,    --logprob-thold N   [-1.00  ] log probability threshold for decoder fail
+  -nth N,    --no-speech-thold N [0.60   ] no speech threshold
+  -tp,       --temperature N     [0.00   ] The sampling temperature, between 0 and 1
+  -tpi,      --temperature-inc N [0.20   ] The increment of temperature, between 0 and 1
+  -debug,    --debug-mode        [false  ] enable debug mode (eg. dump log_mel)
+  -tr,       --translate         [false  ] translate from source language to english
+  -di,       --diarize           [false  ] stereo audio diarization
+  -tdrz,     --tinydiarize       [false  ] enable tinydiarize (requires a tdrz model)
+  -nf,       --no-fallback       [false  ] do not use temperature fallback while decoding
+  -otxt,     --output-txt        [false  ] output result in a text file
+  -ovtt,     --output-vtt        [false  ] output result in a vtt file
+  -osrt,     --output-srt        [false  ] output result in a srt file
+  -olrc,     --output-lrc        [false  ] output result in a lrc file
+  -owts,     --output-words      [false  ] output script for generating karaoke video
+  -fp,       --font-path         [/System/Library/Fonts/Supplemental/Courier New Bold.ttf] path to a monospace font for karaoke video
+  -ocsv,     --output-csv        [false  ] output result in a CSV file
+  -oj,       --output-json       [false  ] output result in a JSON file
+  -ojf,      --output-json-full  [false  ] include more information in the JSON file
+  -of FNAME, --output-file FNAME [       ] output file path (without file extension)
+  -np,       --no-prints         [false  ] do not print anything other than the results
+  -ps,       --print-special     [false  ] print special tokens
+  -pc,       --print-colors      [false  ] print colors
+             --print-confidence  [false  ] print confidence
+  -pp,       --print-progress    [false  ] print progress
+  -nt,       --no-timestamps     [false  ] do not print timestamps
+  -l LANG,   --language LANG     [en     ] spoken language ('auto' for auto-detect)
+  -dl,       --detect-language   [false  ] exit after automatically detecting language
+             --prompt PROMPT     [       ] initial prompt (max n_text_ctx/2 tokens)
+  -m FNAME,  --model FNAME       [models/ggml-base.en.bin] model path
+  -f FNAME,  --file FNAME        [       ] input audio file path
+  -oved D,   --ov-e-device DNAME [CPU    ] the OpenVINO device used for encode inference
+  -dtw MODEL --dtw MODEL         [       ] compute token-level timestamps
+  -ls,       --log-score         [false  ] log best decoder scores of tokens
+  -ng,       --no-gpu            [false  ] disable GPU
+  -fa,       --flash-attn        [false  ] flash attention
+  -sns,      --suppress-nst      [false  ] suppress non-speech tokens
+  --suppress-regex REGEX         [       ] regular expression matching tokens to suppress
+  --grammar GRAMMAR              [       ] GBNF grammar to guide decoding
+  --grammar-rule RULE            [       ] top-level GBNF grammar rule name
+  --grammar-penalty N            [100.0  ] scales down logits of nongrammar tokens
+Voice Activity Detection (VAD) options:
+             --vad                           [false  ] enable Voice Activity Detection (VAD)
+  -vm FNAME, --vad-model FNAME               [       ] VAD model path
+  -vt N,     --vad-threshold N               [0.50   ] VAD threshold for speech recognition
+  -vspd N,   --vad-min-speech-duration-ms  N [250    ] VAD min speech duration (0.0-1.0)
+  -vsd N,    --vad-min-silence-duration-ms N [100    ] VAD min silence duration (to split segments)
+  -vmsd N,   --vad-max-speech-duration-s   N [FLT_MAX] VAD max speech duration (auto-split longer)
+  -vp N,     --vad-speech-pad-ms           N [30     ] VAD speech padding (extend segments)
+  -vo N,     --vad-samples-overlap         N [0.10   ] VAD samples overlap (seconds between segments)
+ChatGPT 说：
+User analysis
+思考，持续 128 秒
+
+好的，我分两部分完成改造：后端与前端。目标如下
+
+    WebSocket 实时日志可见（不再只是落地到文件）。
+
+    刷新后无需再到设置页点“保存”即可使用（后端始终使用 settings.json；前端启动时自动拉取设置并缓存）。
+
+    命令参数严格对齐你给出的 whisper-cli 帮助；命令构建器完整映射所有参数。
+
+    任务页面支持完整参数分组、展开/收起；默认值按 CLI 默认；可将当前参数保存到浏览器本地并一键恢复。
+
+    创建任务支持文件选择器上传到后端临时目录，返回服务器路径后再用于 API 调用。
+
+请按下面文件覆盖/新增。
+
+后端改造
+
+    app/core/log_hub.py（新增：日志广播中心）
+
+import asyncio
+from typing import Dict, Set
+from fastapi import WebSocket
+
+class LogHub:
+    def __init__(self):
+        self.conns: Dict[str, Set[WebSocket]] = {}
+        self._loop: asyncio.AbstractEventLoop | None = None
+
+    def set_loop(self, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
+
+    async def register(self, job_id: str, ws: WebSocket):
+        await ws.accept()
+        self.conns.setdefault(job_id, set()).add(ws)
+
+    async def unregister(self, job_id: str, ws: WebSocket):
+        try:
+            self.conns.get(job_id, set()).discard(ws)
+        except Exception:
+            pass
+        try:
+            await ws.close()
+        except Exception:
+            pass
+
+    async def broadcast(self, job_id: str, text: str):
+        if not text:
+            return
+        conns = list(self.conns.get(job_id, set()))
+        for ws in conns:
+            try:
+                await ws.send_text(text)
+            except Exception:
+                # 发送失败移除
+                try:
+                    self.conns.get(job_id, set()).discard(ws)
+                except Exception:
+                    pass
+
+    def broadcast_from_thread(self, job_id: str, text: str):
+        # 供后台读取子进程输出的线程调用
+        if not self._loop:
+            return
+        self._loop.call_soon_threadsafe(asyncio.create_task, self.broadcast(job_id, text))
+
+log_hub = LogHub()
+
+    app/whisper/command_builder.py（重写：严格按 CLI 映射）
+
+from __future__ import annotations
+from typing import Dict, List, Any
+from app.config import config
+
+# CLI 帮助中所有参数的长选项映射（布尔开关类）
+BOOL_FLAGS = {
+    "split_on_word": "--split-on-word",
+    "debug_mode": "--debug-mode",
+    "translate": "--translate",
+    "diarize": "--diarize",
+    "tinydiarize": "--tinydiarize",
+    "no_fallback": "--no-fallback",
+    "output_txt": "--output-txt",
+    "output_vtt": "--output-vtt",
+    "output_srt": "--output-srt",
+    "output_lrc": "--output-lrc",
+    "output_words": "--output-words",
+    "output_csv": "--output-csv",
+    "output_json": "--output-json",
+    "output_json_full": "--output-json-full",
+    "no_prints": "--no-prints",
+    "print_special": "--print-special",
+    "print_colors": "--print-colors",
+    "print_confidence": "--print-confidence",
+    "print_progress": "--print-progress",
+    "no_timestamps": "--no-timestamps",
+    "detect_language": "--detect-language",
+    "log_score": "--log-score",
+    "no_gpu": "--no-gpu",
+    "flash_attn": "--flash-attn",
+    "suppress_nst": "--suppress-nst",
+    "vad": "--vad",
+}
+
+# 数值/字符串参数映射（需要跟随一个值）
+VALUE_FLAGS = {
+    # 计算/搜索
+    "threads": "--threads",
+    "processors": "--processors",
+    "offset_t": "--offset-t",
+    "offset_n": "--offset-n",
+    "duration": "--duration",
+    "max_context": "--max-context",
+    "max_len": "--max-len",
+    "best_of": "--best-of",
+    "beam_size": "--beam-size",
+    "audio_ctx": "--audio-ctx",
+
+    # 阈值
+    "word_thold": "--word-thold",
+    "entropy_thold": "--entropy-thold",
+    "logprob_thold": "--logprob-thold",
+    "no_speech_thold": "--no-speech-thold",
+    "temperature": "--temperature",
+    "temperature_inc": "--temperature-inc",
+
+    # 语言/模型/文件
+    "language": "--language",
+    "prompt": "--prompt",
+    "model": "--model",
+    "file": "--file",  # 我们仍主要通过 -f/--file 传递
+    "output_file": "--output-file",
+    "ov_e_device": "--ov-e-device",
+    "dtw": "--dtw",
+
+    # 抑制与文法
+    "suppress_regex": "--suppress-regex",
+    "grammar": "--grammar",
+    "grammar_rule": "--grammar-rule",
+    "grammar_penalty": "--grammar-penalty",
+
+    # VAD
+    "vad_model": "--vad-model",
+    "vad_threshold": "--vad-threshold",
+    "vad_min_speech_duration_ms": "--vad-min-speech-duration-ms",
+    "vad_min_silence_duration_ms": "--vad-min-silence-duration-ms",
+    "vad_max_speech_duration_s": "--vad-max-speech-duration-s",
+    "vad_speech_pad_ms": "--vad-speech-pad-ms",
+    "vad_samples_overlap": "--vad-samples-overlap",
+}
+
+def _truthy(v: Any) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    return str(v).strip().lower() in ("1", "true", "yes", "on")
+
+def build_whisper_command(input_file: str, output_format: str, whisper_params: Dict[str, Any]) -> List[str]:
+    """
+    生成 whisper-cli 命令：
+    - 可执行路径：settings.json 的 whisper_path（必须有）
+    - 模型路径：优先 whisper_params.model，否则 settings.json 的 model_path（必须有）
+    - 输入：通过 -f/--file 传入 input_file
+    - 输出格式：改为布尔开关 --output-xxx（与 CLI 帮助一致）
+    """
+    exe = config.get("whisper_path") or ""
+    if not exe:
+        raise ValueError("whisper_path is not configured in settings.json")
+    model = whisper_params.get("model") or config.get("model_path") or ""
+    if not model:
+        raise ValueError("model path is not provided (whisper_params.model or settings.json model_path)")
+
+    params = whisper_params or {}
+    cmd: List[str] = [exe]
+
+    # 统一设置模型
+    cmd += ["--model", model]
+
+    # 输入文件
+    if not input_file:
+        raise ValueError("input_file is required")
+    cmd += ["--file", input_file]
+
+    # 输出文件基名（不带后缀）
+    if params.get("output_file"):
+        cmd += ["--output-file", str(params["output_file"])]
+
+    # 输出格式：将 output_format 作为默认输出开关之一，同时尊重显式开关
+    fmt_map = {
+        "txt": "output_txt",
+        "vtt": "output_vtt",
+        "srt": "output_srt",
+        "lrc": "output_lrc",
+        "csv": "output_csv",
+        "json": "output_json",
+        "json_full": "output_json_full",
+    }
+    # 若用户未显式勾选任何输出，则用 output_format 选中一个
+    if not any(_truthy(params.get(k)) for k in ("output_txt","output_vtt","output_srt","output_lrc","output_csv","output_json","output_json_full")):
+        flag_key = fmt_map.get(output_format)
+        if flag_key:
+            params[flag_key] = True
+
+    # 布尔开关
+    for key, flag in BOOL_FLAGS.items():
+        if _truthy(params.get(key)):
+            cmd.append(flag)
+
+    # 数值/字符串
+    for key, flag in VALUE_FLAGS.items():
+        v = params.get(key)
+        if v is None or v == "":
+            continue
+        # 语言：auto 则不传 --language
+        if key == "language" and str(v).lower() == "auto":
+            continue
+        cmd += [flag, str(v)]
+
+    return cmd
+
+    app/core/process_runner.py（重写：实时广播 + 仍写文件）
+
+import subprocess
+
+
+ChatGPT 也可能会犯错。 | ©️ChatGPT 2023-2025
