@@ -6,6 +6,7 @@ from app.api.routes_tasks import router as tasks_router
 from app.api.routes_settings import router as settings_router
 from app.api.routes_files import router as files_router
 from app.api.routes_probe import router as probe_router, router_compat as probe_router_compat
+from app.api.routes_whisper import router as whisper_router
 
 # 可选：WebSocket 日志（若使用前端 LogConsole）
 try:
@@ -35,6 +36,8 @@ app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(settings_router, prefix="/api/settings", tags=["settings"])
 app.include_router(files_router, prefix="/api/files", tags=["files"])
 app.include_router(probe_router, prefix="/api/probe", tags=["probe"])
+app.include_router(whisper_router, prefix="/api/whisper", tags=["whisper"])
+
 
 # 兼容旧路径 /whisper
 app.include_router(probe_router_compat, prefix="", tags=["probe-compat"])

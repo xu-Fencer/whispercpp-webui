@@ -40,7 +40,7 @@ function connect() {
     ws = new WebSocket(wsUrl);
     ws.onopen = () => { state.value = 'open'; };
     ws.onmessage = (ev) => {
-      logs.value += (typeof ev.data === 'string' ? ev.data : '') + '\n';
+      logs.value += (typeof ev.data === 'string' ? ev.data : '');
       // 自动滚动到底部
       requestAnimationFrame(() => {
         const el = preRef.value;
@@ -81,6 +81,10 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => cleanup());
+</script>
+
+<script lang="ts">
+export default {};
 </script>
 
 <style scoped>

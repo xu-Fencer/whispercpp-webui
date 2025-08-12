@@ -1,6 +1,5 @@
 import asyncio
-import os
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.core.task_manager import task_manager
 
 router = APIRouter()
@@ -8,35 +7,27 @@ router = APIRouter()
 @router.websocket("/logs/{job_id}")
 async def logs_ws(websocket: WebSocket, job_id: str):
     await websocket.accept()
+    await task_manager.add_listener(job_id, websocket)
     try:
-        status = task_manager.get_task_status(job_id)
-        if not status:
-            await websocket.send_text("Task not found")
+        # 检查任务是否存在
+        if not task_manager.get_task_status(job_id):
+            await websocket.send_text(f"Error: Task {job_id} not found.")
             await websocket.close()
             return
 
-        task_dir = status["task_dir"]
-        log_path = os.path.join(task_dir, "log.txt")
-        # 确保日志文件存在
-        os.makedirs(task_dir, exist_ok=True)
-        open(log_path, "a", encoding="utf-8").close()
+        while True:
+            # 保持连接打开，等待来自 TaskManager 的消息
+            # 也可以在这里接收来自客户端的消息，例如心跳
+            await websocket.receive_text() # 等待客户端消息以保持连接
+            await asyncio.sleep(1)
 
-        # 简易 tail -f
-        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
-            f.seek(0, os.SEEK_END)
-            while True:
-                line = f.readline()
-                if line:
-                    await websocket.send_text(line.rstrip("\n"))
-                else:
-                    await asyncio.sleep(0.5)
     except WebSocketDisconnect:
-        pass
+        print(f"WebSocket disconnected for job_id: {job_id}")
+        task_manager.remove_listener(job_id, websocket)
+
     except Exception as e:
-        try:
-            await websocket.send_text(f"WS error: {e}")
-        except Exception:
-            pass
+        print(f"An error occurred in WebSocket for job_id {job_id}: {e}")
+        task_manager.remove_listener(job_id, websocket)
         try:
             await websocket.close()
         except Exception:

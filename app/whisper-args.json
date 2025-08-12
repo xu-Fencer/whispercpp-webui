@@ -1,0 +1,415 @@
+{
+    "threads": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "线程数",
+        "type": "integer",
+        "cli": ["-t", "--threads"],
+        "default": 4,
+        "help": "number of threads to use during computation",
+        "min": 1,
+        "max": 32
+    },
+    "processors": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "处理器数",
+        "type": "integer",
+        "cli": ["-p", "--processors"],
+        "default": 1,
+        "help": "number of processors to use during computation",
+        "min": 1,
+        "max": 8
+    },
+    "offset-t": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "时间偏移（毫秒）",
+        "type": "integer",
+        "cli": ["-ot", "--offset-t"],
+        "default": 0,
+        "help": "time offset in milliseconds"
+    },
+    "offset-n": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "片段索引偏移",
+        "type": "integer",
+        "cli": ["-on", "--offset-n"],
+        "default": 0,
+        "help": "segment index offset"
+    },
+    "duration": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "处理时长（毫秒）",
+        "type": "integer",
+        "cli": ["-d", "--duration"],
+        "default": 0,
+        "help": "duration of audio to process in milliseconds"
+    },
+    "max-context": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "最大上下文令牌数",
+        "type": "integer",
+        "cli": ["-mc", "--max-context"],
+        "default": -1,
+        "help": "maximum number of text context tokens to store"
+    },
+    "max-len": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "最大片段长度",
+        "type": "integer",
+        "cli": ["-ml", "--max-len"],
+        "default": 0,
+        "help": "maximum segment length in characters"
+    },
+    "split-on-word": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "按词分割",
+        "type": "boolean",
+        "cli": ["-sow", "--split-on-word"],
+        "default": false,
+        "help": "split on word rather than on token"
+    },
+    "best-of": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "最佳候选数",
+        "type": "integer",
+        "cli": ["-bo", "--best-of"],
+        "default": 5,
+        "help": "number of best candidates to keep",
+        "min": 1,
+        "max": 10
+    },
+    "beam-size": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "Beam Size",
+        "type": "integer",
+        "cli": ["-bs", "--beam-size"],
+        "default": 5,
+        "help": "beam size for beam search",
+        "min": 1,
+        "max": 10
+    },
+    "audio-ctx": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "音频上下文大小",
+        "type": "integer",
+        "cli": ["-ac", "--audio-ctx"],
+        "default": 0,
+        "help": "audio context size (0 - all)"
+    },
+    "word-thold": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "单词时间戳阈值",
+        "type": "float",
+        "cli": ["-wt", "--word-thold"],
+        "default": 0.01,
+        "help": "word timestamp probability threshold"
+    },
+    "entropy-thold": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "熵阈值",
+        "type": "float",
+        "cli": ["-et", "--entropy-thold"],
+        "default": 2.40,
+        "help": "entropy threshold for decoder fail"
+    },
+    "logprob-thold": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "Log-Prob 阈值",
+        "type": "float",
+        "cli": ["-lpt", "--logprob-thold"],
+        "default": -1.00,
+        "help": "log probability threshold for decoder fail"
+    },
+    "debug-mode": {
+        "group": "Misc",
+        "display_group": "Advanced",
+        "label": "调试模式",
+        "type": "boolean",
+        "cli": ["-debug", "--debug-mode"],
+        "default": false,
+        "help": "enable debug mode (eg. dump log_mel)"
+    },
+    "translate": {
+        "group": "Task",
+        "display_group": "Common",
+        "label": "翻译成英文",
+        "type": "boolean",
+        "cli": ["-tr", "--translate"],
+        "default": false,
+        "help": "translate from source language to english"
+    },
+    "diarize": {
+        "group": "Task",
+        "display_group": "Common",
+        "label": "说话人分离",
+        "type": "boolean",
+        "cli": ["-di", "--diarize"],
+        "default": false,
+        "help": "stereo audio diarization"
+    },
+    "tinydiarize": {
+        "group": "Task",
+        "display_group": "Common",
+        "label": "TinyDiarize",
+        "type": "boolean",
+        "cli": ["-tdrz", "--tinydiarize"],
+        "default": false,
+        "help": "enable tinydiarize (requires a tdrz model)"
+    },
+    "no-fallback": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "不使用温度回退",
+        "type": "boolean",
+        "cli": ["-nf", "--no-fallback"],
+        "default": false,
+        "help": "do not use temperature fallback while decoding"
+    },
+    "output-txt": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出 TXT",
+        "type": "boolean",
+        "cli": ["-otxt", "--output-txt"],
+        "default": false,
+        "help": "output result in a text file"
+    },
+    "output-vtt": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出 VTT",
+        "type": "boolean",
+        "cli": ["-ovtt", "--output-vtt"],
+        "default": false,
+        "help": "output result in a vtt file"
+    },
+    "output-srt": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出 SRT",
+        "type": "boolean",
+        "cli": ["-osrt", "--output-srt"],
+        "default": false,
+        "help": "output result in a srt file"
+    },
+    "output-lrc": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出 LRC",
+        "type": "boolean",
+        "cli": ["-olrc", "--output-lrc"],
+        "default": false,
+        "help": "output result in a lrc file"
+    },
+    "output-words": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出带词时间戳的脚本",
+        "type": "boolean",
+        "cli": ["-owts", "--output-words"],
+        "default": false,
+        "help": "output script for generating karaoke video"
+    },
+    "font-path": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "卡拉OK字体路径",
+        "type": "string",
+        "cli": ["-fp", "--font-path"],
+        "default": "/System/Library/Fonts/Supplemental/Courier New Bold.ttf",
+        "help": "path to a monospace font for karaoke video"
+    },
+    "output-csv": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出 CSV",
+        "type": "boolean",
+        "cli": ["-ocsv", "--output-csv"],
+        "default": false,
+        "help": "output result in a CSV file"
+    },
+    "output-json": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出 JSON",
+        "type": "boolean",
+        "cli": ["-oj", "--output-json"],
+        "default": false,
+        "help": "output result in a JSON file"
+    },
+    "output-json-full": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "输出完整 JSON",
+        "type": "boolean",
+        "cli": ["-ojf", "--output-json-full"],
+        "default": false,
+        "help": "include more information in the JSON file"
+    },
+    "output-file": {
+        "group": "Output",
+        "display_group": "Common",
+        "label": "输出文件路径",
+        "type": "string",
+        "cli": ["-of", "--output-file"],
+        "default": "",
+        "help": "output file path (without file extension)"
+    },
+    "no-prints": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "不打印结果以外的内容",
+        "type": "boolean",
+        "cli": ["-np", "--no-prints"],
+        "default": false,
+        "help": "do not print anything other than the results"
+    },
+    "print-special": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "打印特殊令牌",
+        "type": "boolean",
+        "cli": ["-ps", "--print-special"],
+        "default": false,
+        "help": "print special tokens"
+    },
+    "print-colors": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "打印颜色",
+        "type": "boolean",
+        "cli": ["-pc", "--print-colors"],
+        "default": false,
+        "help": "print colors"
+    },
+    "print-progress": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "打印进度",
+        "type": "boolean",
+        "cli": ["-pp", "--print-progress"],
+        "default": false,
+        "help": "print progress"
+    },
+    "no-timestamps": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "不打印时间戳",
+        "type": "boolean",
+        "cli": ["-nt", "--no-timestamps"],
+        "default": false,
+        "help": "do not print timestamps"
+    },
+    "language": {
+        "group": "Task",
+        "display_group": "Common",
+        "label": "语言",
+        "type": "string",
+        "cli": ["-l", "--language"],
+        "default": "en",
+        "help": "spoken language ('auto' for auto-detect)"
+    },
+    "detect-language": {
+        "group": "Task",
+        "display_group": "Common",
+        "label": "检测语言",
+        "type": "boolean",
+        "cli": ["-dl", "--detect-language"],
+        "default": false,
+        "help": "exit after automatically detecting language"
+    },
+    "prompt": {
+        "group": "Task",
+        "display_group": "Common",
+        "label": "初始提示",
+        "type": "string",
+        "cli": ["--prompt"],
+        "default": "",
+        "help": "initial prompt (max n_text_ctx/2 tokens)"
+    },
+    "ov-e-device": {
+        "group": "OpenVINO",
+        "display_group": "Advanced",
+        "label": "OpenVINO 编码器设备",
+        "type": "string",
+        "cli": ["-oved", "--ov-e-device"],
+        "default": "CPU",
+        "help": "the OpenVINO device used for encode inference"
+    },
+    "dtw": {
+        "group": "Misc",
+        "display_group": "Advanced",
+        "label": "DTW",
+        "type": "string",
+        "cli": ["--dtw"],
+        "default": "",
+        "help": "compute token-level timestamps"
+    },
+    "log-score": {
+        "group": "Output",
+        "display_group": "Advanced",
+        "label": "记录令牌的最佳解码器分数",
+        "type": "boolean",
+        "cli": ["-ls", "--log-score"],
+        "default": false,
+        "help": "log best decoder scores of tokens"
+    },
+    "no-gpu": {
+        "group": "Processing",
+        "display_group": "Advanced",
+        "label": "禁用GPU",
+        "type": "boolean",
+        "cli": ["-ng", "--no-gpu"],
+        "default": false,
+        "help": "disable GPU"
+    },
+    "suppress-regex": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "抑制令牌的正则表达式",
+        "type": "string",
+        "cli": ["--suppress-regex"],
+        "default": "",
+        "help": "regular expression matching tokens to suppress"
+    },
+    "grammar": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "GBNF 语法",
+        "type": "string",
+        "cli": ["--grammar"],
+        "default": "",
+        "help": "GBNF grammar to guide decoding"
+    },
+    "grammar-rule": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "GBNF 语法规则",
+        "type": "string",
+        "cli": ["--grammar-rule"],
+        "default": "",
+        "help": "top-level GBNF grammar rule name"
+    },
+    "grammar-penalty": {
+        "group": "Decoding",
+        "display_group": "Advanced",
+        "label": "语法惩罚",
+        "type": "float",
+        "cli": ["--grammar-penalty"],
+        "default": 100.0,
+        "help": "scales down logits of nongrammar tokens"
+    }
+}

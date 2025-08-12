@@ -16,6 +16,13 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
+import { useSettingsStore } from './stores/settings';
+
+onMounted(() => {
+  const settingsStore = useSettingsStore();
+  settingsStore.fetchSettings();
+});
 </script>
 
 <style scoped>
