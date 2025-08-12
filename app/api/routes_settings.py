@@ -1,6 +1,6 @@
-from fastapi import APIRouter
-import json
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from app.config import config
 from app.core import openvino_env
 
 router = APIRouter()
@@ -14,21 +14,27 @@ class Settings(BaseModel):
 
 @router.get("/", response_model=Settings)
 async def get_settings():
-    with open("app/settings.json", "r") as f:
-        settings = json.load(f)
-    return settings
+    s = config.settings
+    return Settings(
+        whisper_path=s.get("whisper_path", ""),
+        model_path=s.get("model_path", ""),
+        openvino_script_path=s.get("openvino_script_path", ""),
+        openvino_enabled=bool(s.get("openvino_enabled", False)),
+        openvino_shell=s.get("openvino_shell", "auto"),
+    )
 
 @router.post("/")
 async def save_settings(settings: Settings):
-    # 更新配置文件
-    with open("app/settings.json", "w") as f:
-        json.dump(settings.dict(), f, indent=4)
+    config.set("whisper_path", settings.whisper_path)
+    config.set("model_path", settings.model_path)
+    config.set("openvino_script_path", settings.openvino_script_path)
+    config.set("openvino_enabled", settings.openvino_enabled)
+    config.set("openvino_shell", settings.openvino_shell)
     return {"message": "Settings updated"}
 
 @router.post("/openvino/test")
 async def test_openvino_script():
-    # 执行 OpenVINO 脚本，并测试环境变量
     success, output = openvino_env.run_openvino_script()
     if success:
         return {"message": "OpenVINO script executed successfully", "output": output}
-    return {"message": "Failed to execute OpenVINO script", "output": output}
+    raise HTTPException(status_code=500, detail={"message": "Failed to execute OpenVINO script", "output": output})

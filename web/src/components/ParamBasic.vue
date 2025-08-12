@@ -13,7 +13,7 @@
 
     <div style="margin-right: 16px">
       <label class="label">翻译到英文</label>
-      <md-switch :selected="translate" @change="(e:any)=> $emit('update:translate', e.target.selected)"></md-switch>
+      <md-switch :selected="translate" @change="onTranslate"></md-switch>
     </div>
 
     <div>
@@ -29,18 +29,24 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   language: string,
   translate: boolean,
   outputFormat: string,
 }>();
 const emit = defineEmits(['update:language', 'update:translate', 'update:outputFormat']);
 
-function onLang(e: any) {
-  emit('update:language', e.target.value);
+function onLang(e: Event) {
+  const t = e.target as any;
+  emit('update:language', t?.value ?? '');
 }
-function onFmt(e: any) {
-  emit('update:outputFormat', e.target.value);
+function onTranslate(e: Event) {
+  const t = e.target as any;
+  emit('update:translate', !!t?.selected);
+}
+function onFmt(e: Event) {
+  const t = e.target as any;
+  emit('update:outputFormat', t?.value ?? 'srt');
 }
 </script>
 

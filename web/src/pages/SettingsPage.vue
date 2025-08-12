@@ -6,7 +6,7 @@
       <md-outlined-text-field
         label="Whisper 可执行文件路径"
         :value="whisperPath"
-        @input="(e:any)=> whisperPath = e.target.value"
+        @input="onWhisperPath"
         style="width: 520px"
       />
     </div>
@@ -15,7 +15,7 @@
       <md-outlined-text-field
         label="模型文件路径（.bin/.gguf）"
         :value="modelPath"
-        @input="(e:any)=> modelPath = e.target.value"
+        @input="onModelPath"
         style="width: 520px"
       />
     </div>
@@ -24,7 +24,7 @@
       <md-outlined-text-field
         label="OpenVINO 初始化脚本路径（.bat/.sh）"
         :value="openvinoScriptPath"
-        @input="(e:any)=> openvinoScriptPath = e.target.value"
+        @input="onOpenvinoScriptPath"
         style="width: 520px"
       />
     </div>
@@ -32,7 +32,7 @@
     <div class="row">
       <md-switch
         :selected="openvinoEnabled"
-        @change="(e:any)=> openvinoEnabled = e.target.selected"
+        @change="onOpenvinoEnabled"
       ></md-switch>
       <span style="margin-left:8px">每次运行前执行 OpenVINO 初始化脚本</span>
     </div>
@@ -75,6 +75,22 @@ onMounted(async () => {
   }
 });
 
+// 事件处理函数：避免在模板中写类型
+function onWhisperPath(e: Event) {
+  whisperPath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onModelPath(e: Event) {
+  modelPath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onOpenvinoScriptPath(e: Event) {
+  openvinoScriptPath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onOpenvinoEnabled(e: Event) {
+  // md-switch 是 Web Component，selected 在 target 上
+  const t = e.target as any;
+  openvinoEnabled.value = !!t?.selected;
+}
+
 async function save() {
   try {
     await api.saveSettings({
@@ -106,7 +122,8 @@ async function testOpenVINO() {
 async function probe() {
   try {
     const ff = await api.probeFfmpeg();
-    const wh = await api.probeWhisper();
+    // 显式将 whisper 可执行路径传给后端进行探测
+    const wh = await api.probeWhisper(whisperPath.value || undefined);
     probeResult.value = 'ffmpeg: ' + JSON.stringify(ff, null, 2) + '\n\nwhisper: ' + JSON.stringify(wh, null, 2);
   } catch (e: any) {
     probeResult.value = '探测失败: ' + e.message;

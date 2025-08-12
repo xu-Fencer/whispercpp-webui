@@ -6,7 +6,7 @@
       <md-outlined-text-field
         label="源文件服务器路径（暂用：后端可访问的绝对路径）"
         :value="serverFilePath"
-        @input="(e:any)=> serverFilePath = e.target.value"
+        @input="onServerFilePath"
         style="width: 520px"
       />
     </div>
@@ -15,18 +15,18 @@
       :language="language"
       :translate="translate"
       :outputFormat="outputFormat"
-      @update:language="(v:string)=> language=v"
-      @update:translate="(v:boolean)=> translate=v"
-      @update:outputFormat="(v:string)=> outputFormat=v"
+      @update:language="(v)=> language=v"
+      @update:translate="(v)=> translate=v"
+      @update:outputFormat="(v)=> outputFormat=v"
     />
 
     <param-advanced
       :threads="threads"
       :beamSize="beamSize"
       :bestOf="bestOf"
-      @update:threads="(v:number)=> threads=v"
-      @update:beamSize="(v:number)=> beamSize=v"
-      @update:bestOf="(v:number)=> bestOf=v"
+      @update:threads="(v)=> threads=v"
+      @update:beamSize="(v)=> beamSize=v"
+      @update:bestOf="(v)=> bestOf=v"
     />
 
     <div class="row">
@@ -63,6 +63,10 @@ const bestOf = ref(5);
 const jobId = ref('');
 const statusText = ref('');
 
+function onServerFilePath(e: Event) {
+  serverFilePath.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+
 async function createTask() {
   try {
     if (!serverFilePath.value) throw new Error('请填写后端可访问的源文件绝对路径');
@@ -70,6 +74,7 @@ async function createTask() {
     const payload = {
       input_file: serverFilePath.value,
       output_format: outputFormat.value,
+      whisper_exe: store.whisperPath, // 显式传递可执行路径
       whisper_params: {
         model: store.modelPath,
         threads: threads.value,

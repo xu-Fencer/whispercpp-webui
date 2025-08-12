@@ -1,6 +1,6 @@
 {
-    "whisper_path": "whisper-cpp",
-    "model_path": "/path/to/models",
+    "whisper_path": "/home/fencer/miniforge3/envs/anyenv/bin/whisper-cpp",
+    "model_path": "/media/fencer/Data/whisper.cpp/models/Belle-whisper-large-v3-turbo-zh-ggml.bin",
     "openvino_script_path": "/path/to/openvino_env.bat",
     "openvino_enabled": false,
     "openvino_shell": "auto"

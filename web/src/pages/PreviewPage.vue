@@ -5,7 +5,7 @@
       <md-outlined-text-field
         label="媒体文件 URL（由后端静态或文件接口提供）"
         :value="mediaUrl"
-        @input="(e:any)=> mediaUrl = e.target.value"
+        @input="onMediaUrl"
         style="width: 520px"
       />
     </div>
@@ -13,7 +13,7 @@
       <md-outlined-text-field
         label="字幕 VTT URL"
         :value="vttUrl"
-        @input="(e:any)=> vttUrl = e.target.value"
+        @input="onVttUrl"
         style="width: 520px"
       />
     </div>
@@ -34,9 +34,14 @@ import { computed, ref } from 'vue';
 
 const mediaUrl = ref('');
 const vttUrl = ref('');
-const isVideo = computed(() => {
-  return /\.(mp4|mkv|webm|mov)$/i.test(mediaUrl.value);
-});
+const isVideo = computed(() => /\.(mp4|mkv|webm|mov)$/i.test(mediaUrl.value));
+
+function onMediaUrl(e: Event) {
+  mediaUrl.value = (e.target as HTMLInputElement)?.value ?? '';
+}
+function onVttUrl(e: Event) {
+  vttUrl.value = (e.target as HTMLInputElement)?.value ?? '';
+}
 </script>
 
 <style scoped>

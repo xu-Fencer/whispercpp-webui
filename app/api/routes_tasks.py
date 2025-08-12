@@ -1,24 +1,22 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import subprocess
-import os
-from app.core.process_runner import run_whisper_process
-from app.core.task_manager import TaskManager
+from typing import Dict, Any
+from app.core.task_manager import task_manager
 
 router = APIRouter()
 
 class TaskRequest(BaseModel):
     input_file: str
     output_format: str
-    whisper_params: dict
-
-# 用于管理任务
-task_manager = TaskManager()
+    whisper_params: Dict[str, Any] = {}
 
 @router.post("/")
 async def create_task(task: TaskRequest):
-    job_id = task_manager.create_task(task.input_file, task.output_format, task.whisper_params)
-    return {"job_id": job_id}
+    try:
+        job_id = task_manager.create_task(task.input_file, task.output_format, task.whisper_params)
+        return {"job_id": job_id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{job_id}")
 async def get_task_status(job_id: str):
